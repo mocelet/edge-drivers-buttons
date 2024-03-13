@@ -45,7 +45,6 @@ local MULTITAP_TYPES =
    {capabilities.button.button.pushed, capabilities.button.button.double, 
     capabilities.button.button.pushed_3x, capabilities.button.button.pushed_4x, 
     capabilities.button.button.pushed_5x, capabilities.button.button.pushed_6x}
-local MULTITAP_ALL_TYPES_ID = {"pushed", "double", "pushed_3x", "pushed_4x", "pushed_5x", "pushed_6x"}    
 local MULTITAP_DEFAULT_DELAY_SEC = 0.5
 local MULTITAP_DEFAULT_MAX_PRESSES = 2
 
