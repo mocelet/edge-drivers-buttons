@@ -1,0 +1,135 @@
+name: two-buttons-battery-somrig
+components:
+  - id: main
+    capabilities:
+      - id: button
+        version: 1
+      - id: battery
+        version: 1
+      - id: firmwareUpdate
+        version: 1
+      - id: refresh
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: button1
+    label: "Button1 [ · ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: button2
+    label: "Button2 [ · · ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+preferences:
+  - name: "introToggleUp"
+    title: "SOMRIG tweaks"
+    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027 action. You may have to exit the device screen and enter again to see the new action."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Enable Toggled Up after Held"
+    name: exposeReleaseActions
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false    
+  - name: "intro"
+    title: "Fast single-tap"
+    description: "Fast tap removes single-tap delay for quick response by triggering on first-press. Disables double-tap and hold functions."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Fast tap B1 · (ignore hold/double)"
+    name: fastTapButton1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Fast tap B2 · · (ignore hold/double)"
+    name: fastTapButton2
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - name: multiTapIntro
+    title: "MULTI-TAP emulation"
+    description: "Note: SOMRIG may not send multiple quick consecutive taps, prefer a slow-pace. The button adds ~1 second delay for its native double-tap, expect additional delays. Uses hub timers. You may have to exit the device screen and enter again to see the new actions."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Enable Multi-Tap B1 [ · ]"
+    name: multiTapEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Enable Multi-Tap B2 [ · · ]"
+    name: multiTapEnabledB2
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false      
+  - title: "Max multi-taps (up to 6x)"
+    name: multiTapMaxPresses
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 3
+      default: 4
+      maximum: 6
+  - name: autofireIntro
+    title: "AUTO-FIRE on hold emulation"
+    description: "Periodically repeats the \u0027Held\u0027 event while the button is held. Meant to use with drivers that support changing brightness by steps, e.g. 10% more / less. Uses hub timers."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Auto-repeat Hold B1 [ · ]"
+    name: autofireEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Auto-repeat Hold B2 [ · · ]"
+    name: autofireEnabledB2
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false      
+  - title: "Max repetitions (def: 10)"
+    name: autofireMaxLoops
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 1
+      default: 10
+      maximum: 100
+  - title: "Repetition delay (def: 1000 ms)"
+    name: autofireDelay
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 300
+      default: 1000
+      maximum: 5000
