@@ -36,7 +36,13 @@ local devices = {
     },
     SUPPORTED_BUTTON_VALUES = { "pushed", "held" },
     NUMBER_OF_BUTTONS = 5 -- five including the Any Arrow tweak for fast held
-  }
+  },
+  BUTTON_PUSH_HELD_7 = {
+    MATCHING_MATRIX = {
+      { mfr = "IKEA of Sweden", model = "SYMFONISK sound remote gen2" }
+    },
+    SUPPORTED_BUTTON_VALUES = { "pushed", "held" }, -- note: play has no held, dots have double-tap
+    NUMBER_OF_BUTTONS = 7
 }
 
 local configs = {}

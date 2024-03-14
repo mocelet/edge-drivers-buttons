@@ -1,0 +1,63 @@
+name: seven-buttons-battery-symfonisk-gen2
+components:
+  - id: main
+    capabilities:
+      - id: button
+        version: 1
+      - id: battery
+        version: 1
+      - id: firmwareUpdate
+        version: 1
+      - id: refresh
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: play
+    label: "1. PLAY"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: plus
+    label: "2. Plus [ + ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: minus
+    label: "3. Minus [ - ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: prev
+    label: "4. Previous [ < ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: next
+    label: "5. Next [ > ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: dot1
+    label: "6. One dot [ · ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController
+  - id: dot2
+    label: "7. Two dots [ · · ]"
+    capabilities:
+      - id: button
+        version: 1
+    categories:
+      - name: RemoteController

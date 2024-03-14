@@ -46,6 +46,7 @@ local custom_features = require "custom_features"
 local RODRET = "RODRET Dimmer"
 local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
+local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
 
 local do_configure = function(self, device)
   local model = device:get_model()
@@ -63,10 +64,18 @@ local do_configure = function(self, device)
     device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
     device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
     device:send(device_management.build_bind_request(device, clusters.Scenes.ID, self.environment_info.hub_zigbee_eui))  
+  elseif model == SYMFONISK_GEN2 then
+    -- Looks like a mix of all the other buttons
+    -- Thanks to https://github.com/dan-danache/hubitat/blob/main/ikea-zigbee-drivers/E2123.groovy
+    device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
+    device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
+    device:send(device_management.build_bind_request(device, 0xFC7F, self.environment_info.hub_zigbee_eui)) -- FW 1.0.012
+    device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 2)) -- ep 2, FW 1.0.35
+    device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 3)) -- ep 3 FW 1.0.35
   end
  
   -- tweaks: battery fix in RODRET inspired by Vallhorn drivers by the great Mariano (Mc)
-  if model == RODRET or model == SOMRIG then
+  if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
     device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui, 1):to_endpoint(1))
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1):to_endpoint(1))
   elseif model == STYRBAR then
@@ -174,7 +183,8 @@ local ikea_of_sweden = {
   sub_drivers = {
     require("zigbee-multi-button.ikea.RODRET_dimmer"),  -- tweaks: removed all, added the new handlers
     require("zigbee-multi-button.ikea.SOMRIG_shortcut"),
-    require("zigbee-multi-button.ikea.STYRBAR_remote") 
+    require("zigbee-multi-button.ikea.STYRBAR_remote"),
+    require("zigbee-multi-button.ikea.SYMFONISK_gen2")
   },
   can_handle = function(opts, driver, device, ...)
     return device:get_manufacturer() == "IKEA of Sweden" or device:get_manufacturer() == "KE"

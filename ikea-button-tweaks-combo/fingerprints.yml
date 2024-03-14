@@ -14,3 +14,8 @@ zigbeeManufacturer:
     manufacturer: IKEA of Sweden
     model: Remote Control N2
     deviceProfileName: four-buttons-battery-styrbar
+  - id: IKEA/SYMFONISK Gen 2
+    deviceLabel: SYMFONISK Button
+    manufacturer: IKEA of Sweden
+    model: SYMFONISK sound remote gen2
+    deviceProfileName: seven-buttons-battery-symfonisk-gen2
