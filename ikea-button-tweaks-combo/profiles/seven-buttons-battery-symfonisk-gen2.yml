@@ -13,7 +13,7 @@ components:
     categories:
       - name: RemoteController
   - id: play
-    label: "1. PLAY"
+    label: "1. [ PLAY ]"
     capabilities:
       - id: button
         version: 1
@@ -48,16 +48,60 @@ components:
     categories:
       - name: RemoteController
   - id: dot1
-    label: "6. One dot [ · ]"
+    label: "6. Dot [ · ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
   - id: dot2
-    label: "7. Two dots [ · · ]"
+    label: "7. Twin Dots [ · · ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
+  - name: multiTapIntro
+    title: "SYMFONISK tweaks"
+    description: "Adds double-tap up to 6x-tap. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Enable Multi-Tap [ PLAY ]"
+    name: multiTapEnabledPlay
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Enable Multi-Tap [ + - ]"
+    name: multiTapEnabledPlusMinus
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false      
+  - title: "Enable Multi-Tap [ < > ]"
+    name: multiTapEnabledPrevNext
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Max multi-taps (2x to 6x)"
+    name: multiTapMaxPresses
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 2
+      default: 2
+      maximum: 6
+  - title: "Next tap waiting time (def: 500 ms)"
+    name: multiTapDelayMillis
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 200
+      default: 500
+      maximum: 2000

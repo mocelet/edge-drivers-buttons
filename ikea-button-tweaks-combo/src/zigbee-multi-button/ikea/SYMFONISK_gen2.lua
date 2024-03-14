@@ -42,6 +42,16 @@ ButtonNames = {
   TWO_DOTS = "dot2"
 }
 
+-- For multitap tweak compatible buttons (all but dots), instead of sending the event checks if it's a single-tap and multitap is enabled
+local function emit_button_event_multitap_hook(device, button_name, pressed_type)
+  if pressed_type == capabilities.button.button.pushed and custom_features.multitap_enabled(device, button_name) then
+    custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)
+  else
+    custom_button_utils.emit_button_event(device, button_name, pressed_type)
+  end
+end
+
+
 local function symfonisk_plus_minus_handler(pressed_type)
   return function(driver, device, zb_rx)
     -- Like the TRADFRI remote, the arrow events carry the button pressed in the payload
@@ -59,7 +69,7 @@ local function symfonisk_plus_minus_handler(pressed_type)
     end
 
      -- Plus/Minus was pushed or held
-    custom_button_utils.emit_button_event(device, button_name, pressed_type)
+    emit_button_event_multitap_hook(device, button_name, pressed_type)
   end
 end
 
@@ -78,8 +88,8 @@ local function symfonisk_prev_next_handler(pressed_type)
       return -- ignore it, not an actual press
     end
 
-     -- Next/Prev was pushed or held
-    custom_button_utils.emit_button_event(device, button_name, pressed_type)
+    -- Next/Prev was pushed
+    emit_button_event_multitap_hook(device, button_name, pressed_type)
   end
 end
 
@@ -107,9 +117,10 @@ local function symfonisk_dots_v1_handler()
 end
 
 
+-- Handles play pushed messages, it does not support held or double
 local function symfonisk_play_handler(pressed_type)
   return function(driver, device, zb_rx)
-    custom_button_utils.emit_button_event(device, ButtonNames.PLAY, pressed_type)
+    emit_button_event_multitap_hook(device, ButtonNames.PLAY, pressed_type)
   end
 end
 
@@ -138,9 +149,10 @@ local function update_supported_values(device)
     local supported_pressed_types = {"pushed", "held"} -- default
     if button_name == ButtonNames.PLAY or button_name == ButtonNames.PREV or button_name == ButtonNames.NEXT then
       supported_pressed_types = {"pushed"} -- no held in play/prev/next
-    elseif button_name == ButtonNames.ONE_DOT or button_name == ButtonNames.TWO_DOTS then
-      supported_pressed_types = {"pushed", "held", "double"} -- native double-tap in dots
+    elseif button_name == "main" or button_name == ButtonNames.ONE_DOT or button_name == ButtonNames.TWO_DOTS then
+      supported_pressed_types = {"pushed", "held", "double"} -- native double-tap in dots and so in main
     end
+    custom_features.may_insert_multitap_types(supported_pressed_types, device, button_name)
     device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
     device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
   end
@@ -151,6 +163,19 @@ local function added_handler(self, device)
   device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
   device:emit_event(capabilities.button.button.pushed({state_change = false}))
 end
+
+local function info_changed(driver, device, event, args)
+  local needs_press_type_change = 
+    (args.old_st_store.preferences.multiTapEnabledPlay ~= device.preferences.multiTapEnabledPlay)
+    or (args.old_st_store.preferences.multiTapEnabledPlusMinus ~= device.preferences.multiTapEnabledPlusMinus)
+    or (args.old_st_store.preferences.multiTapEnabledPrevNext ~= device.preferences.multiTapEnabledPrevNext)
+    or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
+
+  if needs_press_type_change then
+    update_supported_values(device)
+  end 
+end
+
 
 local symfonisk_gen2 = {
   NAME = "SYMFONISK sound remote gen2",
@@ -177,7 +202,8 @@ local symfonisk_gen2 = {
     }
   },
   lifecycle_handlers = {
-    added = added_handler
+    added = added_handler,
+    infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)
     return device:get_model() == "SYMFONISK sound remote gen2"

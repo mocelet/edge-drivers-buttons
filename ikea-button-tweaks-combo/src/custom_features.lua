@@ -27,6 +27,7 @@ local EXPOSED_RELEASE_TYPE_ID = "up"
 local RODRET = "RODRET Dimmer"
 local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
+local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
 
 local custom_features = {}
 
@@ -55,12 +56,30 @@ function custom_features.multitap_enabled(device, button_name)
             or button_name == "Left" and device.preferences.multiTapEnabledPrev 
             or button_name == "Right" and device.preferences.multiTapEnabledNext
     end
+
+    if model == SYMFONISK_GEN2 then
+      if button_name == "main" then
+        return device.preferences.multiTapEnabledPlay
+              or device.preferences.multiTapEnabledPrevNext 
+              or device.preferences.multiTapEnabledPlusMinus
+      else
+        return button_name == "play" and device.preferences.multiTapEnabledPlay 
+              or button_name == "prev" and device.preferences.multiTapEnabledPrevNext
+              or button_name == "next" and device.preferences.multiTapEnabledPrevNext
+              or button_name == "plus" and device.preferences.multiTapEnabledPlusMinus
+              or button_name == "minus" and device.preferences.multiTapEnabledPlusMinus
+      end
+  
   end
 
   return false -- not supported
 end
     
-function custom_features.multitap_native_count(device)
+function custom_features.multitap_native_count(device, button_name)
+    if device:get_model() == SYMFONISK_GEN2 then
+      -- Dots have native double taps, so Main always has at least double-tap too!
+      return (button_name == "main" or button_name == "dot1" or button_name == "dot2") and 2 or 1
+    end
     return device:get_model() == SOMRIG and 2 or 1 -- SOMRIG has native double-tap
 end
 
@@ -102,7 +121,7 @@ end
 
 function custom_features.may_insert_multitap_types(supported_pressed_types, device, component_id)
   if custom_features.multitap_enabled(device, component_id) then
-    local native_count = custom_features.multitap_native_count(device)
+    local native_count = custom_features.multitap_native_count(device, component_id)
     local max_presses = custom_features.multitap_max_presses(device)
     for i = native_count + 1, max_presses do
       table.insert(supported_pressed_types, MULTITAP_ALL_TYPES_ID[i])
