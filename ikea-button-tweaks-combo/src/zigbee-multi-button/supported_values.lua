@@ -41,7 +41,7 @@ local devices = {
     MATCHING_MATRIX = {
       { mfr = "IKEA of Sweden", model = "SYMFONISK sound remote gen2" }
     },
-    SUPPORTED_BUTTON_VALUES = { "pushed", "held" }, -- note: play has no held, dots have double-tap
+    SUPPORTED_BUTTON_VALUES = { "pushed", "held" }, -- note: custom added_handler needed
     NUMBER_OF_BUTTONS = 7
 }
 

@@ -107,6 +107,13 @@ local function symfonisk_dots_v1_handler()
 end
 
 
+local function symfonisk_play_handler(pressed_type)
+  return function(driver, device, zb_rx)
+    custom_button_utils.emit_button_event(device, ButtonNames.PLAY, pressed_type)
+  end
+end
+
+
 local function symfonisk_dots_v2_handler(pressed_type)
   return function(driver, device, zb_rx)
     local ep = zb_rx.address_header.src_endpoint.value
@@ -123,29 +130,54 @@ local function symfonisk_dots_v2_handler(pressed_type)
 end
 
 
+-- The SYMFONISK has a wide variety of supported actions, added_handler must be custom handled
+local function update_supported_values(device)
+  for _, component in pairs(device.profile.components) do
+    local button_name = component.id
+    local number_of_buttons = button_name == "main" and 7 or 1 -- 7 buttons in total
+    local supported_pressed_types = {"pushed", "held"} -- default
+    if button_name == ButtonNames.PLAY or button_name == ButtonNames.PREV or button_name == ButtonNames.NEXT then
+      supported_pressed_types = {"pushed"} -- no held in play/prev/next
+    elseif button_name == ButtonNames.ONE_DOT or button_name == ButtonNames.TWO_DOTS then
+      supported_pressed_types = {"pushed", "held", "double"} -- native double-tap in dots
+    end
+    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
+    device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
+  end
+end
+
+local function added_handler(self, device)
+  update_supported_values(device)
+  device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
+  device:emit_event(capabilities.button.button.pushed({state_change = false}))
+end
+
 local symfonisk_gen2 = {
   NAME = "SYMFONISK sound remote gen2",
   zigbee_handlers = {
     cluster = {
       [OnOff.ID] = {
-        [0x02] = custom_button_utils.build_button_handler(ButtonNames.PLAY, capabilities.button.button.pushed),
+        [0x02] = symfonisk_play_handler(capabilities.button.button.pushed)
       },
       [Level.ID] = {
-        [0x01] = symfonisk_plus_minus_handler(capabilities.button.button.held),
         [0x02] = symfonisk_prev_next_handler(capabilities.button.button.pushed),
+        [0x01] = symfonisk_plus_minus_handler(capabilities.button.button.held),
         [0x05] = symfonisk_plus_minus_handler(capabilities.button.button.pushed)
       },
       [0xFC7F] = {
         [0x01] = symfonisk_dots_v1_handler()
       },
       [0xFC80] = { 
-        [0x01] = symfonisk_dots_v2_handler(capabilities.button.button.down),
         [0x03] = symfonisk_dots_v2_handler(capabilities.button.button.pushed),
         [0x02] = symfonisk_dots_v2_handler(capabilities.button.button.held),
         [0x06] = symfonisk_dots_v2_handler(capabilities.button.button.double),
+        [0x01] = symfonisk_dots_v2_handler(capabilities.button.button.down),
         [0x04] = symfonisk_dots_v2_handler(capabilities.button.button.up)
       }
     }
+  },
+  lifecycle_handlers = {
+    added = added_handler
   },
   can_handle = function(opts, driver, device, ...)
     return device:get_model() == "SYMFONISK sound remote gen2"
