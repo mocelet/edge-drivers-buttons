@@ -20,14 +20,14 @@ components:
     categories:
       - name: RemoteController
   - id: plus
-    label: "2. Plus [ + ]"
+    label: "2. Up [ + ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
   - id: minus
-    label: "3. Minus [ - ]"
+    label: "3. Down [ - ]"
     capabilities:
       - id: button
         version: 1
@@ -55,7 +55,7 @@ components:
     categories:
       - name: RemoteController
   - id: dot2
-    label: "7. Twin Dots [ · · ]"
+    label: "7. Dots [ · · ]"
     capabilities:
       - id: button
         version: 1
@@ -63,7 +63,7 @@ components:
       - name: RemoteController
   - name: multiTapIntro
     title: "SYMFONISK tweaks"
-    description: "Adds double-tap up to 6x-tap. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
+    description: "Adds double-tap up to 6x-tap. Buttons may implement debouncing and not register consecutive taps, find a pace that works. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
     required: true
     preferenceType: string
     definition:
