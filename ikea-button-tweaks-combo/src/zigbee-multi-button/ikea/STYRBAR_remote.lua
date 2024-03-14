@@ -48,7 +48,8 @@ ButtonNames = {
   ANY_ARROW = "AnyArrow" -- special component for the tweak
 }
 
-
+local OLD_FIRMWARE_VERSION = "00010024" -- 1.0.024 (reports full battery as 100)
+local MODERN_FIRMWARE_VERSION = "02040005" -- 2.4.5 (reports full battery as 200)
 
 -- MULTITAP TWEAK
 -- Note the Styrbar also needs some multitap code in the styrbar_button_handler_with_ghost_suppression for top
@@ -168,6 +169,15 @@ local battery_perc_attr_handler = function(driver, device, value, zb_rx)
   -- Old versions do not, users can set a preference to account for it
 
   local is_old_firmware = device.preferences.isOldFirmware
+
+  -- We will try to be smart here so user doesn't need to do anything
+  local firmware_full_version = device.data.firmwareFullVersion
+  if firmware_full_version == OLD_FIRMWARE_VERSION then
+    is_old_firmware = true -- override preference
+  elseif firmware_full_version == MODERN_FIRMWARE_VERSION then
+    is_old_firmware = false -- override preference
+  end
+
   local corrected_value
   if is_old_firmware then
     corrected_value = value.value

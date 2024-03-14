@@ -51,7 +51,7 @@ components:
 preferences:
   - name: introOldFix
     title: "STYRBAR tweaks"
-    description: "Old firmware versions will display half the battery life, enable fix if needed"
+    description: "Old firmware versions may display half the battery life. The driver should autodetect it, enable fix if needed."
     required: true
     preferenceType: string
     definition:
