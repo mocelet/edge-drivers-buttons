@@ -19,6 +19,12 @@ when it comes to dots buttons (using different clusters).
 The driver implements both (let's call them v1 and v2 handlers). The new
 one (v2) is like the SOMRIG dot buttons. The old one (v1) uses FC7F cluster.
 
+Helpful sources:
+- Discussion about the two firmware versions (factory and new one):
+  https://github.com/zigpy/zha-device-handlers/issues/2223
+- Hubitat driver by Dan Danache
+  https://github.com/dan-danache/hubitat/blob/main/ikea-zigbee-drivers/E2123.groovy
+
 ]]
 
 local capabilities = require "st.capabilities"
