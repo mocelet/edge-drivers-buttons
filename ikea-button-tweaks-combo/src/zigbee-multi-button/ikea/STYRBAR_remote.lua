@@ -195,8 +195,9 @@ local function released_button_handler(pressed_type)
     -- Always stop autofire on release
     custom_button_utils.autofire_stop(device)
 
-    if device.preferences.exposeReleaseActions then
-      custom_button_utils.emit_button_event(device, "main", pressed_type)
+    -- Expose release tweak
+    if custom_features.expose_release_enabled(device) then
+      custom_button_utils.expose_release_emit_release(device)
     end
   end
 end
@@ -222,8 +223,11 @@ local function info_changed(driver, device, event, args)
   end 
 end
 
-local function autofire_button_handler(button_name, pressed_type)
+local function held_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
+    -- Store it for the toggled-up tweak
+    custom_button_utils.expose_release_register_held(device, button_name, pressed_type)
+
     -- Held event is always sent, with autofire or not
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
 
@@ -243,8 +247,8 @@ local on_off_switch = {
         [OnOff.server.commands.On.ID] = styrbar_button_handler_with_ghost_suppression(ButtonNames.ON, capabilities.button.button.pushed)
       },
       [Level.ID] = {
-        [Level.server.commands.Move.ID] = autofire_button_handler(ButtonNames.OFF, capabilities.button.button.held),
-        [Level.server.commands.MoveWithOnOff.ID] = autofire_button_handler(ButtonNames.ON, capabilities.button.button.held),
+        [Level.server.commands.Move.ID] = held_button_handler(ButtonNames.OFF, capabilities.button.button.held),
+        [Level.server.commands.MoveWithOnOff.ID] = held_button_handler(ButtonNames.ON, capabilities.button.button.held),
         [Level.server.commands.Stop.ID] = released_button_handler(capabilities.button.button.up),
         [Level.server.commands.StopWithOnOff.ID] = released_button_handler(capabilities.button.button.up)
       },

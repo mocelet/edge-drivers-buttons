@@ -66,9 +66,9 @@ end
 
 function custom_features.expose_release_enabled(device, button_name)
   local model = device:get_model()
-  -- For STYRBAR Toggled-Up is only exposed to Main component
+  -- For STYRBAR Toggled-Up is only exposed to main, Top and Bottom components
   if model == STYRBAR then
-    return button_name == "main" and device.preferences.exposeReleaseActions
+    return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "Top" or button_name == "Bottom")
   end
   -- For RODRET and SOMRIG it's exposed to all buttons
   if model == RODRET or model == SOMRIG then

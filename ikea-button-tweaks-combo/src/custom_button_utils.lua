@@ -48,6 +48,9 @@ local MULTITAP_TYPES =
 local MULTITAP_DEFAULT_DELAY_SEC = 0.5
 local MULTITAP_DEFAULT_MAX_PRESSES = 2
 
+local EXPOSED_RELEASE_LAST_HELD = "button.exposedrelease.held.last"
+local EXPOSED_RELEASE_TYPE = capabilities.button.button.up
+
 local custom_button_utils = {}
 
 
@@ -219,5 +222,19 @@ custom_button_utils.autofire_start = function(device, button_name, pressed_type,
   device:set_field(AUTOFIRE_DELAY, delay)     
 end
 
+-- EXPOSE RELEASE AFTER HELD TWEAK
+
+-- Keeps track of last known held button
+custom_button_utils.expose_release_register_held = function(device, button_name, pressed_type)
+  if pressed_type == capabilities.button.button.held then
+    device:set_field(EXPOSED_RELEASE_LAST_HELD, button_name)
+  end
+end
+
+-- Emits a release event for the last known held button
+custom_button_utils.expose_release_emit_release = function(device)
+  local last_held = device:get_field(EXPOSED_RELEASE_LAST_HELD) and device:get_field(EXPOSED_RELEASE_LAST_HELD) or "main"
+  custom_button_utils.emit_button_event(device, last_held, EXPOSED_RELEASE_TYPE)
+end
 
 return custom_button_utils

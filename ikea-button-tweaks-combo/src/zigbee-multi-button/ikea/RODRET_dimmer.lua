@@ -32,9 +32,6 @@ local log = require "log"
 local Level = clusters.Level
 local OnOff = clusters.OnOff
 
--- For transient field since RODRET will not tell which button was released
-local LAST_ONOFF_HELD = "button.last.onoff.held"
-
 local BUTTON_OFF = "button1"
 local BUTTON_ON = "button2"
 
@@ -54,9 +51,8 @@ local function released_button_handler(pressed_type)
     custom_button_utils.autofire_stop(device)
 
     -- Toggled-up tweak
-    if device.preferences.exposeReleaseActions then
-      local last_held_button = device:get_field(LAST_ONOFF_HELD) and device:get_field(LAST_ONOFF_HELD) or "main"
-      custom_button_utils.emit_button_event(device, last_held_button, pressed_type)
+    if custom_features.expose_release_enabled(device) then
+      custom_button_utils.expose_release_emit_release(device)
     end
   end
 end
@@ -80,8 +76,8 @@ end
 
 local function held_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
-    -- Store it for the toggled-up tweak since the release message is the same for both buttons
-    device:set_field(LAST_ONOFF_HELD, button_name)
+    -- Stores the last button held for the release expose tweak
+    custom_button_utils.expose_release_register_held(device, button_name, pressed_type)
 
     -- Held event is always sent, with autofire or not
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
