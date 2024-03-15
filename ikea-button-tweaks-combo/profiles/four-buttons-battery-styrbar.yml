@@ -67,7 +67,7 @@ preferences:
       default: false
   - name: "introReleased"
     title: "Release after long-press"
-    description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027 action in the Main component. You may have to exit the device screen and enter again to see the new option"
+    description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027 action. You may have to exit the device screen and enter again to see the new option"
     required: true
     preferenceType: string
     definition:
