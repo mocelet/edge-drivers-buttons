@@ -29,7 +29,7 @@ components:
 preferences:
   - name: "intro"
     title: "RODRET tweaks"
-    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027 action in Main. You may have to exit the device screen and enter again to see the new action."
+    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027. You may have to exit the device screen and enter again to see the new action."
     required: true
     preferenceType: string
     definition:
