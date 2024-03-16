@@ -12,15 +12,15 @@ components:
         version: 1
     categories:
       - name: RemoteController
-  - id: button1
-    label: "Button1 [ O ]"
+  - id: button2
+    label: "Button [ I ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
-  - id: button2
-    label: "Button2 [ I ]"
+  - id: button1
+    label: "Button [ O ]"
     capabilities:
       - id: button
         version: 1
@@ -29,7 +29,7 @@ components:
 preferences:
   - name: "intro"
     title: "RODRET tweaks"
-    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027 action in Main. You may have to exit the device screen and enter again to see the new action."
+    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027. You may have to exit the device screen and enter again to see the new action."
     required: true
     preferenceType: string
     definition:
@@ -53,18 +53,18 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Multi-Tap B1 [ O ]"
-    name: multiTapEnabledB1
-    required: true
-    preferenceType: boolean
-    definition:
-      default: false
-  - title: "Enable Multi-Tap B2 [ I ]"
+  - title: "Enable Multi-Tap [ I ]"
     name: multiTapEnabledB2
     required: true
     preferenceType: boolean
     definition:
       default: false      
+  - title: "Enable Multi-Tap [ O ]"
+    name: multiTapEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
   - title: "Max multi-taps (up to 6x)"
     name: multiTapMaxPresses
     required: true
@@ -91,18 +91,18 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Auto-repeat Hold B1 [ O ]"
-    name: autofireEnabledB1
-    required: true
-    preferenceType: boolean
-    definition:
-      default: false
-  - title: "Auto-repeat Hold B2 [ I ]"
+  - title: "Auto-repeat Hold [ I ]"
     name: autofireEnabledB2
     required: true
     preferenceType: boolean
     definition:
       default: false      
+  - title: "Auto-repeat Hold [ O ]"
+    name: autofireEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
   - title: "Max repetitions (def: 10)"
     name: autofireMaxLoops
     required: true

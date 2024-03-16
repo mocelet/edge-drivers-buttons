@@ -32,8 +32,8 @@ local log = require "log"
 local Level = clusters.Level
 local OnOff = clusters.OnOff
 
-local BUTTON_1 = "button1"
-local BUTTON_2 = "button2"
+local BUTTON_OFF = "button1"
+local BUTTON_ON = "button2"
 
 local function multitap_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
@@ -50,8 +50,9 @@ local function released_button_handler(pressed_type)
     -- Always stop the autofire
     custom_button_utils.autofire_stop(device)
 
-    if device.preferences.exposeReleaseActions then
-      custom_button_utils.emit_button_event(device, "main", pressed_type)
+    -- Toggled-up tweak
+    if custom_features.expose_release_enabled(device) then
+      custom_button_utils.expose_release_emit_release(device)
     end
   end
 end
@@ -73,8 +74,11 @@ local function info_changed(driver, device, event, args)
   end 
 end
 
-local function autofire_button_handler(button_name, pressed_type)
+local function held_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
+    -- Stores the last button held for the release expose tweak
+    custom_button_utils.expose_release_register_held(device, button_name, pressed_type)
+
     -- Held event is always sent, with autofire or not
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
 
@@ -90,12 +94,12 @@ local on_off_switch = {
   zigbee_handlers = {
     cluster = {
       [OnOff.ID] = {
-        [OnOff.server.commands.Off.ID] = multitap_button_handler(BUTTON_1, capabilities.button.button.pushed),
-        [OnOff.server.commands.On.ID] = multitap_button_handler(BUTTON_2, capabilities.button.button.pushed)
+        [OnOff.server.commands.Off.ID] = multitap_button_handler(BUTTON_OFF, capabilities.button.button.pushed),
+        [OnOff.server.commands.On.ID] = multitap_button_handler(BUTTON_ON, capabilities.button.button.pushed)
       },
       [Level.ID] = {
-        [Level.server.commands.Move.ID] = autofire_button_handler(BUTTON_1, capabilities.button.button.held),
-        [Level.server.commands.MoveWithOnOff.ID] = autofire_button_handler(BUTTON_2, capabilities.button.button.held),
+        [Level.server.commands.Move.ID] = held_button_handler(BUTTON_OFF, capabilities.button.button.held),
+        [Level.server.commands.MoveWithOnOff.ID] = held_button_handler(BUTTON_ON, capabilities.button.button.held),
         [Level.server.commands.StopWithOnOff.ID] = released_button_handler(capabilities.button.button.up),
         [Level.server.commands.Stop.ID] = released_button_handler(capabilities.button.button.up) -- they don't seem to send this, but just in case (others do)
       }

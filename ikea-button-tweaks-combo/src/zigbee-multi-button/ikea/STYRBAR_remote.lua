@@ -34,11 +34,18 @@ local custom_button_utils = require "custom_button_utils"
 local custom_features = require "custom_features"
 local utils = require 'st.utils'
 local log = require "log"
+local lua_socket = require "socket" -- Just to use gettime() which is more accurate
 
 local Level = clusters.Level
 local OnOff = clusters.OnOff
 local Scenes = clusters.Scenes
 local PowerConfiguration = clusters.PowerConfiguration
+
+local PRE_GHOST_EVENT_TIME = "styrbar.time.preghost"
+local IGNORE_GHOST_THRESHOLD = 0.7 -- 700ms (taken from Herdsman converter)
+
+local OLD_FIRMWARE_VERSION = "00010024" -- 1.0.024 (reports full battery as 100)
+local MODERN_FIRMWARE_VERSION = "02040005" -- 2.4.5 (reports full battery as 200)
 
 ButtonNames = {
   ON = "Top",
@@ -47,8 +54,6 @@ ButtonNames = {
   NEXT = "Right",
   ANY_ARROW = "AnyArrow" -- special component for the tweak
 }
-
-
 
 -- MULTITAP TWEAK
 -- Note the Styrbar also needs some multitap code in the styrbar_button_handler_with_ghost_suppression for top
@@ -79,10 +84,6 @@ end
   The strategy is storing the timestamp of the event that precedes the ghost and then check the elapsed time
   before triggering ON pushed should it be a ghost.
 --]]
-
-local PRE_GHOST_EVENT_TIME = "styrbar.time.preghost"
-local IGNORE_GHOST_THRESHOLD = 0.7 -- 700ms (taken from Herdsman converter)
-local lua_socket = require "socket" -- Just to use gettime() which is more accurate
 
 -- Handles Scenes 0x09 command (comes before the ghost)
 local function styrbar_begin_held_handler(pressed_type)
@@ -168,6 +169,15 @@ local battery_perc_attr_handler = function(driver, device, value, zb_rx)
   -- Old versions do not, users can set a preference to account for it
 
   local is_old_firmware = device.preferences.isOldFirmware
+
+  -- We will try to be smart here so user doesn't need to do anything
+  local firmware_full_version = device.data.firmwareFullVersion
+  if firmware_full_version == OLD_FIRMWARE_VERSION then
+    is_old_firmware = true -- override preference
+  elseif firmware_full_version == MODERN_FIRMWARE_VERSION then
+    is_old_firmware = false -- override preference
+  end
+
   local corrected_value
   if is_old_firmware then
     corrected_value = value.value
@@ -185,8 +195,9 @@ local function released_button_handler(pressed_type)
     -- Always stop autofire on release
     custom_button_utils.autofire_stop(device)
 
-    if device.preferences.exposeReleaseActions then
-      custom_button_utils.emit_button_event(device, "main", pressed_type)
+    -- Expose release tweak
+    if custom_features.expose_release_enabled(device) then
+      custom_button_utils.expose_release_emit_release(device)
     end
   end
 end
@@ -212,8 +223,11 @@ local function info_changed(driver, device, event, args)
   end 
 end
 
-local function autofire_button_handler(button_name, pressed_type)
+local function held_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
+    -- Store it for the toggled-up tweak
+    custom_button_utils.expose_release_register_held(device, button_name, pressed_type)
+
     -- Held event is always sent, with autofire or not
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
 
@@ -233,8 +247,8 @@ local on_off_switch = {
         [OnOff.server.commands.On.ID] = styrbar_button_handler_with_ghost_suppression(ButtonNames.ON, capabilities.button.button.pushed)
       },
       [Level.ID] = {
-        [Level.server.commands.Move.ID] = autofire_button_handler(ButtonNames.OFF, capabilities.button.button.held),
-        [Level.server.commands.MoveWithOnOff.ID] = autofire_button_handler(ButtonNames.ON, capabilities.button.button.held),
+        [Level.server.commands.Move.ID] = held_button_handler(ButtonNames.OFF, capabilities.button.button.held),
+        [Level.server.commands.MoveWithOnOff.ID] = held_button_handler(ButtonNames.ON, capabilities.button.button.held),
         [Level.server.commands.Stop.ID] = released_button_handler(capabilities.button.button.up),
         [Level.server.commands.StopWithOnOff.ID] = released_button_handler(capabilities.button.button.up)
       },

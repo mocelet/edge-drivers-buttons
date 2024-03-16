@@ -51,7 +51,7 @@ components:
 preferences:
   - name: introOldFix
     title: "STYRBAR tweaks"
-    description: "Old firmware versions will display half the battery life, enable fix if needed"
+    description: "Old firmware versions may display half the battery life. The driver should autodetect it, enable fix if needed."
     required: true
     preferenceType: string
     definition:
@@ -67,7 +67,7 @@ preferences:
       default: false
   - name: "introReleased"
     title: "Release after long-press"
-    description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027 action in the Main component. You may have to exit the device screen and enter again to see the new option"
+    description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027 action. You may have to exit the device screen and enter again to see the new option"
     required: true
     preferenceType: string
     definition:
