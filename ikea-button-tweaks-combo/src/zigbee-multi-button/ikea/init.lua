@@ -69,7 +69,7 @@ local do_configure = function(self, device)
     -- Thanks to https://github.com/dan-danache/hubitat/blob/main/ikea-zigbee-drivers/E2123.groovy
     device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
     device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
-    device:send(device_management.build_bind_request(device, 0xFC7F, self.environment_info.hub_zigbee_eui)) -- FW 1.0.012
+    device:send(device_management.build_bind_request(device, 0xFC7F, self.environment_info.hub_zigbee_eui, 1)) -- FW 1.0.012
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 2)) -- ep 2, FW 1.0.35
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 3)) -- ep 3 FW 1.0.35
   end

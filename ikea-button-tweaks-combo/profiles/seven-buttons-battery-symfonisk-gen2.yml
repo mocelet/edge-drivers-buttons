@@ -48,21 +48,38 @@ components:
     categories:
       - name: RemoteController
   - id: dot1
-    label: "6. Dot [ · ]"
+    label: "6. Single Dot [ · ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
   - id: dot2
-    label: "7. Dots [ · · ]"
+    label: "7. Twin Dots [ · · ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
-  - name: multiTapIntro
+preferences:      
+  - name: intro
     title: "SYMFONISK tweaks"
+    description: "Holding [ + ] or [ - ] generates multiple Held events while pressed. The driver can suppress the repetitions so the Held action is only executed once, useful when you want Held to toggle things."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Suppress Held repetitions [ + - ]"
+    name: suppressHeldRepeat
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - name: multiTapIntro
+    title: "MULTI-TAP emulation"
     description: "Adds double-tap up to 6x-tap. Buttons may implement debouncing and not register consecutive taps, find a pace that works. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
     required: true
     preferenceType: string

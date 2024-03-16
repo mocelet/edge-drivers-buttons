@@ -47,7 +47,7 @@ local IGNORE_GHOST_THRESHOLD = 0.7 -- 700ms (taken from Herdsman converter)
 local OLD_FIRMWARE_VERSION = "00010024" -- 1.0.024 (reports full battery as 100)
 local MODERN_FIRMWARE_VERSION = "02040005" -- 2.4.5 (reports full battery as 200)
 
-ButtonNames = {
+local ButtonNames = {
   ON = "Top",
   OFF = "Bottom",
   PREV = "Left",

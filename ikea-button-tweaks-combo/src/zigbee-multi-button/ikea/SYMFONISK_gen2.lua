@@ -31,13 +31,21 @@ local capabilities = require "st.capabilities"
 local custom_button_utils = require "custom_button_utils"
 local custom_features = require "custom_features"
 local log = require "log"
+local clusters = require "st.zigbee.zcl.clusters"
+local Level = clusters.Level
+local OnOff = clusters.OnOff
+local PowerConfiguration = clusters.PowerConfiguration
+local lua_socket = require "socket" -- Just to use gettime() which is more accurate
 
-ButtonNames = {
+local LAST_VOLUME_HELD_TIME_PREFIX = "symfonisk.volume.held.time."
+local IGNORE_HELD_THRESHOLD = 1 -- Usually held events are spaced 400ms but I've seen 700ms and 800ms so 1 second
+
+local ButtonNames = {
   PLAY = "play",
   PREV = "prev",
   NEXT = "next",
   PLUS = "plus",
-  MINUS = "minus"
+  MINUS = "minus",
   ONE_DOT = "dot1",
   TWO_DOTS = "dot2"
 }
@@ -54,38 +62,50 @@ end
 
 local function symfonisk_plus_minus_handler(pressed_type)
   return function(driver, device, zb_rx)
-    -- Like the TRADFRI remote, the arrow events carry the button pressed in the payload
-    local payload_id = zb_rx.body.zcl_body.body_bytes:byte(1)
-    
-    -- It is only an actual press if the payload is 0x00 or 0x01
-    -- Ignoring others just in case happens like in STYRBAR
-    local button_name
-    if payload_id == 0x00 then
+    local move_mode = zb_rx.body.zcl_body.move_mode.value
+    if move_mode == Level.types.MoveStepMode.UP then
       button_name = ButtonNames.PLUS
-    elseif payload_id == 0x01 then
+    elseif move_mode == Level.types.MoveStepMode.DOWN then
       button_name = ButtonNames.MINUS
     else
-      return -- ignore it, not an actual press
+      return
     end
-
      -- Plus/Minus was pushed or held
+
+     -- SUPPRESS REPETITION CUSTOM TWEAK
+     -- It's interesting, looks like holding + or - generate a continuous
+     -- stream of Held events every 400ms. Makes sense being a volume control.
+     -- Adding a tweak to suppress the repetitions, they clutter the history
+     -- and sometimes you want to toggle stuff with the held action, not possible
+     -- if the action is repeating multiple times.
+
+    if pressed_type == capabilities.button.button.held and device.preferences.suppressHeldRepeat then
+      local time_key = LAST_VOLUME_HELD_TIME_PREFIX .. button_name
+      local last_held_time = device:get_field(time_key)
+      local current_held_time = lua_socket.gettime()
+      device:set_field(time_key, current_held_time)        
+      if last_held_time then
+        local elapsed = current_held_time - last_held_time
+        if elapsed > 0 and elapsed < IGNORE_HELD_THRESHOLD then
+          return -- it's a repetition of the same Held event, ignore!
+        end
+      end
+    end
+  
     emit_button_event_multitap_hook(device, button_name, pressed_type)
   end
 end
 
 local function symfonisk_prev_next_handler(pressed_type)
   return function(driver, device, zb_rx)
-    local payload_id = zb_rx.body.zcl_body.body_bytes:byte(1)
-   
-    -- It is only an actual press if the payload is 0x00 or 0x01
-    -- Ignoring others just in case happens like in STYRBAR
-    local button_name
-    if payload_id == 0x00 then
-      button_name = ButtonNames.NEXT
-    elseif payload_id == 0x01 then
+    local step_mode = zb_rx.body.zcl_body.step_mode.value
+
+    if step_mode == Level.types.MoveStepMode.UP  then
+      button_name = ButtonNames.NEXT      
+    elseif step_mode == Level.types.MoveStepMode.DOWN then
       button_name = ButtonNames.PREV
     else
-      return -- ignore it, not an actual press
+      return
     end
 
     -- Next/Prev was pushed
@@ -182,12 +202,12 @@ local symfonisk_gen2 = {
   zigbee_handlers = {
     cluster = {
       [OnOff.ID] = {
-        [0x02] = symfonisk_play_handler(capabilities.button.button.pushed)
+        [OnOff.server.commands.Toggle.ID] = symfonisk_play_handler(capabilities.button.button.pushed)
       },
       [Level.ID] = {
-        [0x02] = symfonisk_prev_next_handler(capabilities.button.button.pushed),
-        [0x01] = symfonisk_plus_minus_handler(capabilities.button.button.held),
-        [0x05] = symfonisk_plus_minus_handler(capabilities.button.button.pushed)
+        [Level.server.commands.Step.ID] = symfonisk_prev_next_handler(capabilities.button.button.pushed),
+        [Level.server.commands.Move.ID] = symfonisk_plus_minus_handler(capabilities.button.button.held),
+        [Level.server.commands.MoveWithOnOff.ID] = symfonisk_plus_minus_handler(capabilities.button.button.pushed)
       },
       [0xFC7F] = {
         [0x01] = symfonisk_dots_v1_handler()

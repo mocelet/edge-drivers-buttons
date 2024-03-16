@@ -43,6 +43,7 @@ local devices = {
     },
     SUPPORTED_BUTTON_VALUES = { "pushed", "held" }, -- note: custom added_handler needed
     NUMBER_OF_BUTTONS = 7
+  }
 }
 
 local configs = {}

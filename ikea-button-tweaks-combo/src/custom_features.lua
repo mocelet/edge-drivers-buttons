@@ -47,29 +47,29 @@ function custom_features.multitap_enabled(device, button_name)
   if model == STYRBAR then
     if button_name == "main" then
       return device.preferences.multiTapEnabledOn 
-            or device.preferences.multiTapEnabledOff 
-            or device.preferences.multiTapEnabledPrev 
-            or device.preferences.multiTapEnabledNext
+        or device.preferences.multiTapEnabledOff 
+        or device.preferences.multiTapEnabledPrev 
+        or device.preferences.multiTapEnabledNext
     else
       return button_name == "Top" and device.preferences.multiTapEnabledOn 
-            or button_name == "Bottom" and device.preferences.multiTapEnabledOff 
-            or button_name == "Left" and device.preferences.multiTapEnabledPrev 
-            or button_name == "Right" and device.preferences.multiTapEnabledNext
+        or button_name == "Bottom" and device.preferences.multiTapEnabledOff 
+        or button_name == "Left" and device.preferences.multiTapEnabledPrev 
+        or button_name == "Right" and device.preferences.multiTapEnabledNext
     end
-
-    if model == SYMFONISK_GEN2 then
-      if button_name == "main" then
-        return device.preferences.multiTapEnabledPlay
-              or device.preferences.multiTapEnabledPrevNext 
-              or device.preferences.multiTapEnabledPlusMinus
-      else
-        return button_name == "play" and device.preferences.multiTapEnabledPlay 
-              or button_name == "prev" and device.preferences.multiTapEnabledPrevNext
-              or button_name == "next" and device.preferences.multiTapEnabledPrevNext
-              or button_name == "plus" and device.preferences.multiTapEnabledPlusMinus
-              or button_name == "minus" and device.preferences.multiTapEnabledPlusMinus
-      end
+  end
   
+  if model == SYMFONISK_GEN2 then
+    if button_name == "main" then
+      return device.preferences.multiTapEnabledPlay
+            or device.preferences.multiTapEnabledPrevNext 
+            or device.preferences.multiTapEnabledPlusMinus
+    else
+      return button_name == "play" and device.preferences.multiTapEnabledPlay 
+            or button_name == "prev" and device.preferences.multiTapEnabledPrevNext
+            or button_name == "next" and device.preferences.multiTapEnabledPrevNext
+            or button_name == "plus" and device.preferences.multiTapEnabledPlusMinus
+            or button_name == "minus" and device.preferences.multiTapEnabledPlusMinus
+    end
   end
 
   return false -- not supported
