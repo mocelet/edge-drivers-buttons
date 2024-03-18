@@ -2,5 +2,5 @@ name: 'Ikea Button Tweaks'
 packageKey: 'ikea-button-tweaks'
 permissions:
   zigbee: {}
-description: "Supports IKEA RODRET, SOMRIG and the modern STYRBAR (fw 2.4.5) buttons with additional custom tweaks in settings like 6X multi-tap emulation."
+description: "Supports IKEA RODRET, SOMRIG, SYMFONISK Gen 2 and the modern STYRBAR (fw 2.4.5) buttons with additional custom tweaks in settings like multi-tap emulation."
 vendorSupportInformation: "https://community.smartthings.com"
