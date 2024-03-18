@@ -55,20 +55,6 @@ local ButtonNames = {
   ANY_ARROW = "AnyArrow" -- special component for the tweak
 }
 
--- MULTITAP TWEAK
--- Note the Styrbar also needs some multitap code in the styrbar_button_handler_with_ghost_suppression for top
--- Also in styrbar_scenes_button_handler for left/right
--- It's not as easy as in other buttons where you just replace the handler
-
-local function multitap_button_handler(button_name, pressed_type)
-  return function(driver, device, zb_rx)
-    if not custom_features.multitap_enabled(device, button_name) then
-      custom_button_utils.emit_button_event(device, button_name, pressed_type)
-      return
-    end
-    custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)
-  end
-end
 
 --[[
   The STYRBAR prev/next held is weird since it also sends a ON event -the ghost- but we do not want to
@@ -150,8 +136,8 @@ local function styrbar_scenes_button_handler(pressed_type)
 
     if pressed_type == capabilities.button.button.pushed and custom_features.multitap_enabled(device, button_name) then
       custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)  
-      -- TODO And what do we do with the AnyArrow OMG, just tell that it will not receive events other than held. Guess that is fine
-      -- We could just remove the action if multitap is enabled
+      -- Note the handle_multitap function only handles one component, the AnyArrow component will
+      -- not trigger when multi-tap is enabled. It is ok, the profile preference already warns about that.
       return -- processed
     end
 
@@ -214,10 +200,8 @@ local function info_changed(driver, device, event, args)
   if needs_press_type_change then
     for _, component in pairs(device.profile.components) do
         local supported_pressed_types = {"pushed", "held"} -- default
-
         custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
         custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-
         device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
     end
   end 
@@ -234,6 +218,21 @@ local function held_button_handler(button_name, pressed_type)
     -- If autofire custom tweak is enabled it will repeat the event automatically
     if custom_features.autofire_enabled(device, button_name) then
       custom_button_utils.autofire_start(device, button_name, pressed_type, device.preferences.autofireDelay, device.preferences.autofireMaxLoops)
+    end
+  end
+end
+
+-- MULTITAP TWEAK
+-- Note the Styrbar also needs some multitap code in the styrbar_button_handler_with_ghost_suppression for top
+-- Also in styrbar_scenes_button_handler for left/right
+-- It's not as easy as in other buttons where you just replace a common handler
+
+local function multitap_button_handler(button_name, pressed_type)
+  return function(driver, device, zb_rx)
+    if custom_features.multitap_enabled(device, button_name) then
+      custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)
+    else
+      custom_button_utils.emit_button_event(device, button_name, pressed_type)
     end
   end
 end
