@@ -85,12 +85,14 @@ end
 
 function custom_features.expose_release_enabled(device, button_name)
   local model = device:get_model()
-  -- For STYRBAR Toggled-Up is only exposed to main, Top and Bottom components
   if model == STYRBAR then
+    -- For STYRBAR Toggled-Up is only exposed to main, Top and Bottom components
     return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "Top" or button_name == "Bottom")
-  end
-  -- For RODRET and SOMRIG it's exposed to all buttons
-  if model == RODRET or model == SOMRIG then
+  elseif model == SYMFONISK_GEN2 then
+    -- For SYMFONISK Gen 2 only to the dots, but mind only new firmwares have a release event
+    return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "dot1" or button_name == "dot2")
+  elseif model == RODRET or model == SOMRIG then
+    -- For RODRET and SOMRIG it's exposed to all buttons
     return device.preferences.exposeReleaseActions
   end
 

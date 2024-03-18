@@ -150,10 +150,13 @@ local function symfonisk_dots_v2_handler(pressed_type)
     local ep = zb_rx.address_header.src_endpoint.value
     local button_name = ep == 2 and ButtonNames.ONE_DOT or ButtonNames.TWO_DOTS
 
-    if pressed_type == capabilities.button.button.down
-        or pressed_type == capabilities.button.button.up then
-      -- ignoring them for now
-     return
+    if pressed_type == capabilities.button.button.down then
+      return -- ignore first-press
+    end
+
+    -- EXPOSE RELEASE TWEAK
+    if pressed_type == capabilities.button.button.up and not device.preferences.exposeReleaseActions then
+      return -- ignore release event, not exposed
     end
 
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
@@ -173,6 +176,7 @@ local function update_supported_values(device)
       supported_pressed_types = {"pushed", "held", "double"} -- native double-tap in dots and so in main
     end
     custom_features.may_insert_multitap_types(supported_pressed_types, device, button_name)
+    custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
     device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
     device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
   end
@@ -190,6 +194,7 @@ local function info_changed(driver, device, event, args)
     or (args.old_st_store.preferences.multiTapEnabledPlusMinus ~= device.preferences.multiTapEnabledPlusMinus)
     or (args.old_st_store.preferences.multiTapEnabledPrevNext ~= device.preferences.multiTapEnabledPrevNext)
     or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
+    or (args.old_st_store.preferences.exposeReleaseActions ~= device.preferences.exposeReleaseActions)
 
   if needs_press_type_change then
     update_supported_values(device)
