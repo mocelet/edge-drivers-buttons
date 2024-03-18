@@ -83,7 +83,7 @@ end
 
   The strategy is storing the timestamp of the event that precedes the ghost and then check the elapsed time
   before triggering ON pushed should it be a ghost.
---]]
+]]
 
 -- Handles Scenes 0x09 command (comes before the ghost)
 local function styrbar_begin_held_handler(pressed_type)

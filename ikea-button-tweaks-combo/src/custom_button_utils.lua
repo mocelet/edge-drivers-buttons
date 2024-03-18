@@ -106,7 +106,7 @@ end
  multitap_window_millis (waiting time for next tap) are meant to directly pass the device.preferences 
  set by the user, except for buttons with native double-tap, where the developer should set a window according
  to the native window of the double-tap feature.
---]]
+]]
 custom_button_utils.handle_multitap = function(device, button_name, pressed_type, multitap_max_presses, multitap_window_millis)
   if not (pressed_type == capabilities.button.button.pushed or pressed_type == capabilities.button.button.double) then
     return false
