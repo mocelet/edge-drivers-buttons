@@ -37,11 +37,11 @@ local BUTTON_ON = "button2"
 
 local function multitap_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
-    if not custom_features.multitap_enabled(device, button_name) then
+    if custom_features.multitap_enabled(device, button_name) then
+      custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)
+    else
       custom_button_utils.emit_button_event(device, button_name, pressed_type)
-      return
     end
-    custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)
   end
 end
 
