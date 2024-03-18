@@ -38,13 +38,18 @@ local MULTITAP_SOMRIG_WINDOW_MILLIS = 1000 -- time to wait after a pushed/double
 local BUTTON_1 = "button1"
 local BUTTON_2 = "button2"
 
--- A modified custom_button_utils.build_button_handler to check the source endpoint to get the button name.
--- is_initial is true when the button is pressed but the type (single/double/held) is not known yet. In that case,
--- the fast tap tweak will emit the given pressed_type (usually a pushed) without waiting to confirm the type.
-local function build_somrig_button_handler(pressed_type, is_initial)
+--[[
+  SOMRIG uses a custom cluster where the source endpoint determines the button.
+  Pressed types 'down' and 'up' signal initial press and release after held. 
+  When a 'down' is received the button is pressed but the final type (pushed/double/held) is not 
+  known yet. In that case, the fast tap tweak will emit a pushed without waiting to confirm the 
+  type, avoiding the ~1 second wait for a potential double-tap.
+]]
+local function build_somrig_button_handler(pressed_type)
   return function(driver, device, zb_rx)
     local button_number = zb_rx.address_header.src_endpoint.value
     local button_name = button_number == 1 and BUTTON_1 or BUTTON_2
+    local first_press = pressed_type == capabilities.button.button.down
 
     -- AUTO-FIRE TWEAK (STOP on release)
     --'up' means a hold release, always stop the autofire
@@ -53,7 +58,7 @@ local function build_somrig_button_handler(pressed_type, is_initial)
     end
 
     local has_multitap = custom_features.multitap_enabled(device, button_name)
-    if has_multitap and is_initial then
+    if has_multitap and first_press then
       custom_button_utils.multitap_first_press_hint(device, button_name, MULTITAP_SOMRIG_FIRST_PRESS_WINDOW_MILLIS)
     end
     
@@ -64,15 +69,20 @@ local function build_somrig_button_handler(pressed_type, is_initial)
 
     -- FAST TAP TWEAK
     -- When not enabled for a button, the initial press event is ignored (default behaviour)
-    -- When enabled, the button triggers on the initial event, so further (non initial) events are ignored
+    -- When enabled, the button triggers on the initial event and further (non initial) events are ignored
 
     local fast_tap_enabled = {device.preferences.fastTapButton1, device.preferences.fastTapButton2}
-    if ((is_initial and not fast_tap_enabled[button_number]) or (fast_tap_enabled[button_number] and not is_initial)) then
-      return -- ignore the event
+    if first_press and fast_tap_enabled[button_number] then
+      custom_button_utils.emit_button_event(device, button_name, capabilities.button.button.pushed)
+      return -- Fast tap triggers pushed on first-press
+    elseif first_press and not fast_tap_enabled[button_number] then
+      return -- Ignore first-press because fast-tap is disabled
+    elseif not first_press and fast_tap_enabled[button_number] then
+      return -- Ignore because fast tap already triggered on first-press
     end
 
     -- MULTI-TAP TWEAK
-    if has_multitap and not is_initial and (pressed_type == capabilities.button.button.pushed or pressed_type == capabilities.button.button.double) then
+    if has_multitap and (pressed_type == capabilities.button.button.pushed or pressed_type == capabilities.button.button.double) then
       custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, MULTITAP_SOMRIG_WINDOW_MILLIS)
       return -- processed
     end
@@ -109,11 +119,11 @@ local shortcut_button = {
   zigbee_handlers = {
     cluster = {
       [0xFC80] = { 
-        [0x01] = build_somrig_button_handler(capabilities.button.button.pushed, true),
-        [0x03] = build_somrig_button_handler(capabilities.button.button.pushed, false),
-        [0x02] = build_somrig_button_handler(capabilities.button.button.held, false),
-        [0x06] = build_somrig_button_handler(capabilities.button.button.double, false),
-        [0x04] = build_somrig_button_handler(capabilities.button.button.up, false)
+        [0x01] = build_somrig_button_handler(capabilities.button.button.down), -- first-press
+        [0x03] = build_somrig_button_handler(capabilities.button.button.pushed),
+        [0x02] = build_somrig_button_handler(capabilities.button.button.held),
+        [0x06] = build_somrig_button_handler(capabilities.button.button.double),
+        [0x04] = build_somrig_button_handler(capabilities.button.button.up) -- released after held
       }
     }
   },
