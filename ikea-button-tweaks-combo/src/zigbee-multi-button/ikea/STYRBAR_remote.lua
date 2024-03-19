@@ -141,11 +141,15 @@ local function styrbar_scenes_button_handler(pressed_type)
       return -- processed
     end
 
-    custom_button_utils.emit_button_event(device, button_name, pressed_type)
+    -- Held events were notified to AnyArrow and main first. Now it is time for individual arrows, but
+    -- we do not want main triggered again so skipping it (param skip_main of emit_button_event true)
+    -- Pushed events have to be notified to the button and main as always, and also AnyArrow, but not main again.
 
-    -- The any arrow held event was triggered back when we didn't know which arrow
-    if pressed_type ~= capabilities.button.button.held then
-      custom_button_utils.emit_button_event(device, ButtonNames.ANY_ARROW, pressed_type)
+    if pressed_type == capabilities.button.button.held then
+      custom_button_utils.emit_button_event(device, button_name, pressed_type, true)
+    elseif pressed_type == capabilities.button.button.pushed then
+      custom_button_utils.emit_button_event(device, button_name, pressed_type)
+      custom_button_utils.emit_button_event(device, ButtonNames.ANY_ARROW, pressed_type, true)
     end
   end
 end

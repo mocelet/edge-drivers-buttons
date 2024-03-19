@@ -58,12 +58,13 @@ local custom_button_utils = {}
 
 -- Emitting code extracted to a function for reuse in custom
 -- button handlers where the button_name is unknown in advance
-custom_button_utils.emit_button_event = function(device, button_name, pressed_type)
+-- If skip_main is not nil, will not emit the event for main (used for some tweaks)
+custom_button_utils.emit_button_event = function(device, button_name, pressed_type, skip_main)
   local event = pressed_type({state_change = true})
   local comp = device.profile.components[button_name]
   if comp then
     device:emit_component_event(comp, event)
-    if button_name ~= "main" then
+    if button_name ~= "main" and not skip_main then
       device:emit_event(event)
     end
   else
