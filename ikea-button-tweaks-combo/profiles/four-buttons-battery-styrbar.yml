@@ -83,7 +83,7 @@ preferences:
       default: false
   - name: multiTapIntro
     title: "MULTI-TAP emulation"
-    description: "Up to 6x multi-tap. Buttons may implement debouncing, find a pace that works. Any Arrow [< >] component \u0027pushed\u0027 event will not trigger. Uses hub timers. You may have to exit the device screen and enter again to see the new actions."
+    description: "Adds double-tap up to 6x-tap. Buttons may implement debouncing and not register consecutive taps, find a pace that works. Uses hub timers. You may have to exit the device screen and enter again to see the new actions."
     required: true
     preferenceType: string
     definition:

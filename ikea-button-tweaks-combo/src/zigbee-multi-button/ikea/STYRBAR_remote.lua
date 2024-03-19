@@ -136,20 +136,17 @@ local function styrbar_scenes_button_handler(pressed_type)
 
     if pressed_type == capabilities.button.button.pushed and custom_features.multitap_enabled(device, button_name) then
       custom_button_utils.handle_multitap(device, button_name, pressed_type, device.preferences.multiTapMaxPresses, device.preferences.multiTapDelayMillis)  
-      -- Note the handle_multitap function only handles one component, the AnyArrow component will
-      -- not trigger when multi-tap is enabled. It is ok, the profile preference already warns about that.
       return -- processed
     end
 
     -- Held events were notified to AnyArrow and main first. Now it is time for individual arrows, but
     -- we do not want main triggered again so skipping it (param skip_main of emit_button_event true)
-    -- Pushed events have to be notified to the button and main as always, and also AnyArrow, but not main again.
+    -- Pushed events have to be notified to the button and main as always, but not AnyArrow to not complicate things.
 
     if pressed_type == capabilities.button.button.held then
       custom_button_utils.emit_button_event(device, button_name, pressed_type, true)
     elseif pressed_type == capabilities.button.button.pushed then
       custom_button_utils.emit_button_event(device, button_name, pressed_type)
-      custom_button_utils.emit_button_event(device, ButtonNames.ANY_ARROW, pressed_type, true)
     end
   end
 end
@@ -192,6 +189,26 @@ local function released_button_handler(pressed_type)
   end
 end
 
+-- The STYRBAR AnyArrow can be confusing, removing the pushed event which is 
+-- not compatible with multi-tap and only is useful for held.
+local function update_supported_values(device)
+  for _, component in pairs(device.profile.components) do
+    local supported_pressed_types = {"pushed", "held"} -- default
+    if component.id == ButtonNames.ANY_ARROW then
+      supported_pressed_types = {"held"}
+    end
+    custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
+    custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
+    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
+  end
+end
+
+local function added_handler(self, device)
+  update_supported_values(device)
+  device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
+  device:emit_event(capabilities.button.button.pushed({state_change = false}))
+end
+
 local function info_changed(driver, device, event, args)
   local needs_press_type_change = 
     (args.old_st_store.preferences.exposeReleaseActions ~= device.preferences.exposeReleaseActions)
@@ -202,14 +219,10 @@ local function info_changed(driver, device, event, args)
     or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
 
   if needs_press_type_change then
-    for _, component in pairs(device.profile.components) do
-        local supported_pressed_types = {"pushed", "held"} -- default
-        custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
-        custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-        device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
-    end
+    update_supported_values(device)
   end 
 end
+
 
 local function held_button_handler(button_name, pressed_type)
   return function(driver, device, zb_rx)
@@ -241,6 +254,8 @@ local function multitap_button_handler(button_name, pressed_type)
   end
 end
 
+
+
 local on_off_switch = {
   NAME = "Remote Control N2",
   zigbee_handlers = {
@@ -268,6 +283,7 @@ local on_off_switch = {
     }
   },
   lifecycle_handlers = {
+    added = added_handler,
     infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)
