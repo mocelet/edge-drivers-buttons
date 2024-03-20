@@ -100,7 +100,7 @@ function custom_features.expose_release_enabled(device, button_name)
 end
    
 function custom_features.multitap_max_presses(device)
-  return device.preferences.multiTapMaxPresses and device.preferences.multiTapMaxPresses or 2
+  return device.preferences.multiTapMaxPresses or 2
 end
 
 

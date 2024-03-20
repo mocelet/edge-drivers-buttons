@@ -117,7 +117,7 @@ custom_button_utils.handle_multitap = function(device, button_name, pressed_type
   local timer_key = MULTITAP_TIMER_PREFIX .. button_name
 
   local delay = multitap_window_millis and multitap_window_millis / 1000 or MULTITAP_DEFAULT_DELAY_SEC
-  local max_presses = multitap_max_presses and multitap_max_presses or MULTITAP_DEFAULT_MAX_PRESSES
+  local max_presses = multitap_max_presses or MULTITAP_DEFAULT_MAX_PRESSES
 
   local timer = device:get_field(timer_key)
 
@@ -189,9 +189,9 @@ local function autofire_callback(device, button_name, pressed_type)
     custom_button_utils.emit_button_event(device, button_name, pressed_type)
 
     -- Should we retrigger the timer?
-    local previous_loop_count = device:get_field(AUTOFIRE_LOOP_COUNT) and device:get_field(AUTOFIRE_LOOP_COUNT) or 0
-    local max_loops =  device:get_field(AUTOFIRE_MAX_LOOPS) and device:get_field(AUTOFIRE_MAX_LOOPS) or 1
-    local delay =  device:get_field(AUTOFIRE_DELAY) and device:get_field(AUTOFIRE_DELAY) or AUTOFIRE_DEFAULT_DELAY
+    local previous_loop_count = device:get_field(AUTOFIRE_LOOP_COUNT) or 0
+    local max_loops = device:get_field(AUTOFIRE_MAX_LOOPS) or 1
+    local delay = device:get_field(AUTOFIRE_DELAY) or AUTOFIRE_DEFAULT_DELAY
 
     local updated_loop_count = previous_loop_count + 1
     device:set_field(AUTOFIRE_LOOP_COUNT, updated_loop_count)
@@ -214,8 +214,8 @@ custom_button_utils.autofire_start = function(device, button_name, pressed_type,
   custom_button_utils.autofire_stop(device)
 
   -- Create the timer, one-shot only, callback will create another one if needed
-  local delay = autofire_delay_millis and (autofire_delay_millis / 1000) or AUTOFIRE_DEFAULT_DELAY
-  local max_loops = autofire_max_loops and autofire_max_loops or AUTOFIRE_DEFAULT_MAX_LOOPS
+  local delay = autofire_delay_millis and autofire_delay_millis / 1000 or AUTOFIRE_DEFAULT_DELAY
+  local max_loops = autofire_max_loops or AUTOFIRE_DEFAULT_MAX_LOOPS
   timer = device.thread:call_with_delay(delay, autofire_callback(device, button_name, pressed_type))
   device:set_field(AUTOFIRE_TIMER, timer)   
   device:set_field(AUTOFIRE_LOOP_COUNT, 0)     
@@ -234,7 +234,7 @@ end
 
 -- Emits a release event for the last known held button
 custom_button_utils.expose_release_emit_release = function(device)
-  local last_held = device:get_field(EXPOSED_RELEASE_LAST_HELD) and device:get_field(EXPOSED_RELEASE_LAST_HELD) or "main"
+  local last_held = device:get_field(EXPOSED_RELEASE_LAST_HELD) or "main"
   custom_button_utils.emit_button_event(device, last_held, EXPOSED_RELEASE_TYPE)
 end
 
