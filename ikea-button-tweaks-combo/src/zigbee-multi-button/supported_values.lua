@@ -18,7 +18,8 @@
 local devices = {
   BUTTON_PUSH_HELD_2 = {
     MATCHING_MATRIX = {
-      { mfr = "IKEA of Sweden", model = "RODRET Dimmer" }
+      { mfr = "IKEA of Sweden", model = "RODRET Dimmer" },
+      { mfr = "IKEA of Sweden", model = "TRADFRI on/off switch" }
       },
     SUPPORTED_BUTTON_VALUES = { "pushed", "held"},
     NUMBER_OF_BUTTONS = 2
@@ -32,10 +33,11 @@ local devices = {
   },
   BUTTON_PUSH_HELD_5 = {
     MATCHING_MATRIX = {
-      { mfr = "IKEA of Sweden", model = "Remote Control N2" }
+      { mfr = "IKEA of Sweden", model = "Remote Control N2" },
+      { mfr = "IKEA of Sweden", model = "TRADFRI remote control" }
     },
     SUPPORTED_BUTTON_VALUES = { "pushed", "held" },
-    NUMBER_OF_BUTTONS = 5 -- five including the Any Arrow tweak for fast held
+    NUMBER_OF_BUTTONS = 5 -- five includes the Any Arrow tweak for STYRBAR
   },
   BUTTON_PUSH_HELD_7 = {
     MATCHING_MATRIX = {

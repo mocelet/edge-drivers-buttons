@@ -15,8 +15,6 @@
 Custom handling of long-pressed arrows and ghost "ON pushed" suppression, see
 https://community.smartthings.com/t/edge-ikea-styrbar-button-edge-driver-fw-2-4-5-compatible-full-arrow-support/279296
 
-Setting to fix battery reporting in old versions where full battery was not the standard 200 but 100.
-
 AnyArrow component for fast held arrows when you don't mind which one.
 
 Toggled-Up support to expose a release after long-press.
@@ -24,6 +22,9 @@ Toggled-Up support to expose a release after long-press.
 Multitap support for up to 6x.
 
 Auto-fire on hold.
+
+Battery reporting differences in old and new firmwares is now handled in init.lua
+and the preference to manually enable the fix has been removed.
 
 ]]
 
@@ -43,9 +44,6 @@ local PowerConfiguration = clusters.PowerConfiguration
 
 local PRE_GHOST_EVENT_TIME = "styrbar.time.preghost"
 local IGNORE_GHOST_THRESHOLD = 0.7 -- 700ms (taken from Herdsman converter)
-
-local OLD_FIRMWARE_VERSION = "00010024" -- 1.0.024 (reports full battery as 100)
-local MODERN_FIRMWARE_VERSION = "02040005" -- 2.4.5 (reports full battery as 200)
 
 local ButtonNames = {
   ON = "Top",
@@ -151,31 +149,6 @@ local function styrbar_scenes_button_handler(pressed_type)
   end
 end
 
-local battery_perc_attr_handler = function(driver, device, value, zb_rx)
-  -- New STYRBAR firmwares report double the percentage as per standard (200 means full).
-  -- Old versions do not, users can set a preference to account for it
-
-  local is_old_firmware = device.preferences.isOldFirmware
-
-  -- We will try to be smart here so user doesn't need to do anything
-  local firmware_full_version = device.data.firmwareFullVersion
-  if firmware_full_version == OLD_FIRMWARE_VERSION then
-    is_old_firmware = true -- override preference
-  elseif firmware_full_version == MODERN_FIRMWARE_VERSION then
-    is_old_firmware = false -- override preference
-  end
-
-  local corrected_value
-  if is_old_firmware then
-    corrected_value = value.value
-  else
-    corrected_value = utils.round(value.value / 2)
-  end
-  -- Note that percentage can be 255 when unknown and that value is reported by styrbar too
-  local percentage = utils.clamp_value(corrected_value, 0, 100)
-  device:emit_event(capabilities.battery.battery(percentage))
-end
-
 -- Handles button release, I'm not confident about the events so will only update main like in RODRET
 local function released_button_handler(pressed_type)
   return function(driver, device, zb_rx)
@@ -254,8 +227,6 @@ local function multitap_button_handler(button_name, pressed_type)
   end
 end
 
-
-
 local on_off_switch = {
   NAME = "Remote Control N2",
   zigbee_handlers = {
@@ -274,11 +245,6 @@ local on_off_switch = {
         [0x07] = styrbar_scenes_button_handler(capabilities.button.button.pushed), -- prev/next
         [0x08] = styrbar_scenes_button_handler(capabilities.button.button.held), -- prev/next
         [0x09] = styrbar_begin_held_handler(capabilities.button.button.held) -- button unknown
-      }
-    },
-    attr = {
-      [PowerConfiguration.ID] = {
-        [PowerConfiguration.attributes.BatteryPercentageRemaining.ID] = battery_perc_attr_handler
       }
     }
   },

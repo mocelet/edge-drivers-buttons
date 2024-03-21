@@ -14,12 +14,14 @@
 
 --[[ mocelet 2024
 
-Mostly the stock init.lua with custom modifications to support the new buttons
+Based on stock init.lua with custom modifications to support the new buttons
+and fix battery reporting depending on firmware:
 
 - do_configure includes specific bindings for each model.
-- Fixed battery PowerConfiguration binding and reporting.
-- Fixed handler for battery level battery_perc_attr_handler.
 - Hooks for new expose release and multi-tap custom features in added_handler.
+- New has_old_ikea_firmware function to detect pre-2023 firmwares with different
+  battery reporting affecting STYRBAR as well as TRADFRI models.
+- Improved battery_perc_attr_handler to account for old firmwares.
 
 ]]
 
@@ -48,22 +50,23 @@ local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
 local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
 
-local TRADFRI_ON_OFF = "TRADFRI on/off switch" -- binding done by stock drivers, isJoinable: false
-local TRADFRI_REMOTE = "TRADFRI remote control" -- binding done by stock drivers, isJoinable: false
+local TRADFRI_ON_OFF = "TRADFRI on/off switch"
+local TRADFRI_REMOTE = "TRADFRI remote control"
 
 local do_configure = function(self, device)
   local model = device:get_model()
   
   -- tweaks: each model has specific bindings, did not want subdrivers to handle doConfigure lifecycle
-  if model == RODRET then 
+  if model == RODRET or model == TRADFRI_ON_OFF then 
     device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
     device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
   elseif model == SOMRIG then
     -- Somrig has same custom cluster but different endpoints for each button
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 1))
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 2))
-  elseif model == STYRBAR then
+  elseif model == STYRBAR or model == TRADFRI_REMOTE then
     -- Styrbar needs three bindings since firmware 2.4.5 (December 2022), should work with older versions
+    -- Same goes for TRADFRI remote
     device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
     device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
     device:send(device_management.build_bind_request(device, clusters.Scenes.ID, self.environment_info.hub_zigbee_eui))  
@@ -75,18 +78,13 @@ local do_configure = function(self, device)
     device:send(device_management.build_bind_request(device, 0xFC7F, self.environment_info.hub_zigbee_eui, 1)) -- FW 1.0.012
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 2)) -- ep 2, FW 1.0.35
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 3)) -- ep 3 FW 1.0.35
-  elseif model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE then
-    -- From stock drivers
-    device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui))
-    device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
-    device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1))
   end
  
   -- tweaks: battery fix in RODRET inspired by Vallhorn drivers by the great Mariano (Mc)
   if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
     device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui, 1):to_endpoint(1))
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1):to_endpoint(1))
-  elseif model == STYRBAR then
+  elseif model == STYRBAR or model == TRADFRI_REMOTE or model == TRADFRI_ON_OFF then
     device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui, 1))
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1))
   end
@@ -165,14 +163,44 @@ local function zdo_binding_table_handler(driver, device, zb_rx)
   end
 end
 
-local battery_perc_attr_handler = function(driver, device, value, zb_rx)
-  -- tweaks: rodret and somrig send double the value like the vallhorn, again Mc to the rescue
-  -- styrbar uses its own handler in the subdriver
-  -- old tradfri buttons send 100 for full battery, no division needed
 
+--[[
+  Identifies old IKEA firmwares, the ones reporting full battery level 
+  as 100 instead of the standard 200.
+
+  Rodret, Somrig and Symfonisk are new models, no problem there.
+  Styrbar has old versions like 00010024, new started in 02040005 (2.4.x)
+  
+  Tradfri remote has old versions like 12214572, new started in 24040006 (24.x)
+  Tradri on/off has old versions like 22010631, new started in 24040006 (24.x)
+  Source for Tradfri: https://github.com/zigpy/zha-device-handlers/issues/2203
+]]
+function has_old_ikea_firmware(device)
   local model = device:get_model()
-  local old_model = model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE
-  local reported_value = old_model and value.value or utils.round(value.value / 2) 
+  if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
+    return false -- modern devices, check not needed
+  end
+
+  -- Check firmware
+  local firmware_full_version = device.data.firmwareFullVersion or "00"
+  local version_1 = tonumber(firmware_full_version:sub(1,1), 16)
+  local version_2 = tonumber(firmware_full_version:sub(2,2), 16)
+  log.debug("Firmware: " .. firmware_full_version .. ". Keys: " .. version_1 .. "," .. version_2)
+  if model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE then
+    -- Everything less than 2 4 is old in Tradfri
+    return version_1 < 2 or version_1 == 2 and version_2 < 4
+  elseif model == STYRBAR then
+    -- Everything less than 0 2 is old in Styrbar
+    return version_1 == 0 and version_2 < 2
+  end
+
+  return false -- default
+end
+
+local battery_perc_attr_handler = function(driver, device, value, zb_rx)
+  -- Battery readings depends on the model and firmware version.
+  -- See has_old_ikea_firmware function
+  local reported_value = has_old_ikea_firmware(device) and value.value or utils.round(value.value / 2)
   local percentage = utils.clamp_value(reported_value, 0, 100)
   device:emit_event(capabilities.battery.battery(percentage))
 end

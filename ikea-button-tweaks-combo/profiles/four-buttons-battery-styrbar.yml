@@ -49,24 +49,8 @@ components:
     categories:
       - name: RemoteController      
 preferences:
-  - name: introOldFix
-    title: "STYRBAR tweaks"
-    description: "Old firmware versions may display half the battery life. The driver should autodetect it, enable fix if needed."
-    required: true
-    preferenceType: string
-    definition:
-      stringType: text
-      minLength: 0
-      maxLength: 0
-      default: ""
-  - title: "Fix battery display in old versions"
-    name: isOldFirmware
-    required: true
-    preferenceType: boolean
-    definition:
-      default: false
   - name: "introReleased"
-    title: "Release after long-press"
+    title: "STYRBAR tweaks"
     description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027 action. You may have to exit the device screen and enter again to see the new option"
     required: true
     preferenceType: string
@@ -75,7 +59,7 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Toggled Up after Held"
+  - title: "Enable Toggled Up on release"
     name: exposeReleaseActions
     required: true
     preferenceType: boolean

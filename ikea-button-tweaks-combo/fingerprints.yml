@@ -19,24 +19,13 @@ zigbeeManufacturer:
     manufacturer: IKEA of Sweden
     model: SYMFONISK sound remote gen2
     deviceProfileName: seven-buttons-battery-symfonisk-gen2
-
-  # Old TRADFRI models, isJoinable is false so users
-  # can switch to the driver only if they want and the
-  # binding is handled by the stock or other custom drivers.
-
-  # TRADFRI on/off uses the same profile than RODRET, while
-  # it says RODRET in a label it is pointless to create a
-  # new profile just to change a word.
-
   - id: "IKEA/TRADFRI on off"
     deviceLabel: TRADFRI Button
     manufacturer: IKEA of Sweden
     model: TRADFRI on/off switch
     deviceProfileName: two-buttons-battery-rodret
-    isJoinable: false # Will not handle pairing
   - id: "IKEA/TRADFRI remote"
     deviceLabel: TRADFRI Button
     manufacturer: IKEA of Sweden
     model: TRADFRI remote control
     deviceProfileName: five-buttons-battery-tradfri-remote
-    isJoinable: false # Will not handle pairing
