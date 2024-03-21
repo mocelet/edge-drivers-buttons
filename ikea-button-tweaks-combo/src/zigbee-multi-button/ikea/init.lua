@@ -75,6 +75,11 @@ local do_configure = function(self, device)
     device:send(device_management.build_bind_request(device, 0xFC7F, self.environment_info.hub_zigbee_eui, 1)) -- FW 1.0.012
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 2)) -- ep 2, FW 1.0.35
     device:send(device_management.build_bind_request(device, 0xFC80, self.environment_info.hub_zigbee_eui, 3)) -- ep 3 FW 1.0.35
+  elseif model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE then
+    -- From stock drivers
+    device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui))
+    device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
+    device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1))
   end
  
   -- tweaks: battery fix in RODRET inspired by Vallhorn drivers by the great Mariano (Mc)
