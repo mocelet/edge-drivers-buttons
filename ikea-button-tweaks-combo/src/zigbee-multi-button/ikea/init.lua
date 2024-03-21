@@ -192,6 +192,7 @@ local ikea_of_sweden = {
     require("zigbee-multi-button.ikea.RODRET_dimmer"),  -- tweaks: removed all, added the new handlers
     require("zigbee-multi-button.ikea.SOMRIG_shortcut"),
     require("zigbee-multi-button.ikea.STYRBAR_remote"),
+    require("zigbee-multi-button.ikea.TRADFRI_remote"),
     require("zigbee-multi-button.ikea.SYMFONISK_gen2")
   },
   can_handle = function(opts, driver, device, ...)

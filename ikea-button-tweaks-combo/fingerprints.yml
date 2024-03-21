@@ -34,3 +34,9 @@ zigbeeManufacturer:
     model: TRADFRI on/off switch
     deviceProfileName: two-buttons-battery-rodret
     isJoinable: false # Will not handle pairing
+  - id: "IKEA/TRADFRI remote"
+    deviceLabel: TRADFRI Button
+    manufacturer: IKEA of Sweden
+    model: TRADFRI remote control
+    deviceProfileName: five-buttons-battery-tradfri-remote
+    isJoinable: false # Will not handle pairing

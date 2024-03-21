@@ -74,6 +74,18 @@ function custom_features.multitap_enabled(device, button_name)
     end
   end
 
+  if model == TRADFRI_REMOTE then
+    -- Arrows in TRADFRI have strong debounce, not implementing multi-tap
+    if button_name == "main" then
+      return device.preferences.multiTapEnabledToggle
+            or device.preferences.multiTapEnabledPlusMinus
+    else
+      return button_name == "button5" and device.preferences.multiTapEnabledToggle 
+            or button_name == "button1" and device.preferences.multiTapEnabledPlusMinus
+            or button_name == "button3" and device.preferences.multiTapEnabledPlusMinus
+    end
+  end
+
   return false -- not supported
 end
     
@@ -90,6 +102,9 @@ function custom_features.expose_release_enabled(device, button_name)
   if model == STYRBAR then
     -- For STYRBAR Toggled-Up is only exposed to main, Top and Bottom components
     return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "Top" or button_name == "Bottom")
+  elseif model == TRADFRI_REMOTE then
+    -- For TRADFRI Toggled-Up is only exposed to main, Top and Bottom components
+    return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "button1" or button_name == "button3")
   elseif model == SYMFONISK_GEN2 then
     -- For SYMFONISK Gen 2 only to the dots, but mind only new firmwares have a release event
     return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "dot1" or button_name == "dot2")
@@ -115,6 +130,10 @@ function custom_features.autofire_enabled(device, button_name)
   
   if model == STYRBAR then
     return button_name == "Top" and device.preferences.autofireEnabledOn or button_name == "Bottom" and device.preferences.autofireEnabledOff
+  end
+
+  if model == TRADFRI_REMOTE then
+    return device.preferences.autofireEnabled and (button_name == "button1" or button_name == "button3")
   end
 
   return false -- not supported
