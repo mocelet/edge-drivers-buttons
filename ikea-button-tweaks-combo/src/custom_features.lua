@@ -28,6 +28,8 @@ local RODRET = "RODRET Dimmer"
 local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
 local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
+local TRADFRI_ON_OFF = "TRADFRI on/off switch" -- binding done by stock drivers, isJoinable: false
+local TRADFRI_REMOTE = "TRADFRI remote control" -- binding done by stock drivers, isJoinable: false
 
 local custom_features = {}
 
@@ -36,7 +38,7 @@ local custom_features = {}
 function custom_features.multitap_enabled(device, button_name)
   local model = device:get_model()
     
-  if model == RODRET or model == SOMRIG then
+  if model == RODRET or model == SOMRIG or model == TRADFRI_ON_OFF then
       if button_name == "main" then
         return device.preferences.multiTapEnabledB1 or device.preferences.multiTapEnabledB2
       else
@@ -91,7 +93,7 @@ function custom_features.expose_release_enabled(device, button_name)
   elseif model == SYMFONISK_GEN2 then
     -- For SYMFONISK Gen 2 only to the dots, but mind only new firmwares have a release event
     return device.preferences.exposeReleaseActions and (button_name == nil or button_name == "main" or button_name == "dot1" or button_name == "dot2")
-  elseif model == RODRET or model == SOMRIG then
+  elseif model == RODRET or model == SOMRIG or model == TRADFRI_ON_OFF then
     -- For RODRET and SOMRIG it's exposed to all buttons
     return device.preferences.exposeReleaseActions
   end
@@ -107,7 +109,7 @@ end
 function custom_features.autofire_enabled(device, button_name)
   local model = device:get_model()
     
-  if model == RODRET or model == SOMRIG then
+  if model == RODRET or model == SOMRIG or model == TRADFRI_ON_OFF then
     return button_name == "button1" and device.preferences.autofireEnabledB1 or button_name == "button2" and device.preferences.autofireEnabledB2
   end
   

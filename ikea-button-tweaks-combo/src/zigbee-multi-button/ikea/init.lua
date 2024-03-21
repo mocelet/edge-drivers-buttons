@@ -48,6 +48,9 @@ local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
 local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
 
+local TRADFRI_ON_OFF = "TRADFRI on/off switch" -- binding done by stock drivers, isJoinable: false
+local TRADFRI_REMOTE = "TRADFRI remote control" -- binding done by stock drivers, isJoinable: false
+
 local do_configure = function(self, device)
   local model = device:get_model()
   
@@ -160,7 +163,12 @@ end
 local battery_perc_attr_handler = function(driver, device, value, zb_rx)
   -- tweaks: rodret and somrig send double the value like the vallhorn, again Mc to the rescue
   -- styrbar uses its own handler in the subdriver
-  local percentage = utils.clamp_value(utils.round(value.value / 2), 0, 100)
+  -- old tradfri buttons send 100 for full battery, no division needed
+
+  local model = device:get_model()
+  local old_model = model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE
+  local reported_value = old_model and value.value or utils.round(value.value / 2) 
+  local percentage = utils.clamp_value(reported_value, 0, 100)
   device:emit_event(capabilities.battery.battery(percentage))
 end
 

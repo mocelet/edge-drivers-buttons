@@ -21,6 +21,8 @@ Multi-tap custom tweak with configurable timer and max presses.
 
 Auto-fire custom tweak with configurable max loops and delay.
 
+Added support for the old TRADFRI on/off switch since the events are the same.
+
 ]]
 
 local capabilities = require "st.capabilities"
@@ -109,7 +111,7 @@ local on_off_switch = {
     infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)
-    return device:get_model() == "RODRET Dimmer"
+    return device:get_model() == "RODRET Dimmer" or device:get_model() == "TRADFRI on/off switch"
   end
 }
 
