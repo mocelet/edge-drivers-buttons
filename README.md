@@ -2,7 +2,7 @@
 
 Edge driver for the SmartThings Hub with custom tweaks to support modern Zigbee IKEA smart buttons that were not previously supported by stock or custom drivers.
 
-**Supports**: IKEA RODRET, SOMRIG, modern STYRBAR (firmware 2.4.5) and modern SYMFONISK Gen2 (firmware 1.0.35)
+**Supports**: IKEA RODRET, SOMRIG, modern STYRBAR (firmware 2.4.5) and modern SYMFONISK Gen2 (firmware 1.0.35). Also TRADFRI on/off and TRADFRI 5-button remote.
 
 ## Unique features:
 - Can expose the release after Held as a Toggled-Up event to use with smart blinds.
