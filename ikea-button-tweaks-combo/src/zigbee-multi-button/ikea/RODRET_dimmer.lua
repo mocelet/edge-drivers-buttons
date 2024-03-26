@@ -67,12 +67,7 @@ local function info_changed(driver, device, event, args)
     or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
 
   if needs_press_type_change then
-    for _, component in pairs(device.profile.components) do
-        local supported_pressed_types = {"pushed", "held"} -- default
-        custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
-        custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-        device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
-    end
+    custom_features.update_pressed_types(device)
   end 
 end
 

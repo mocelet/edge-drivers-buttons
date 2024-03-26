@@ -150,8 +150,16 @@ local function symfonisk_dots_v2_handler(pressed_type)
     local ep = zb_rx.address_header.src_endpoint.value
     local button_name = ep == 2 and ButtonNames.ONE_DOT or ButtonNames.TWO_DOTS
 
-    if pressed_type == capabilities.button.button.down then
-      return -- ignore first-press
+    -- FAST-TAP TWEAK for dots, like in SOMRIG
+    local first_press = pressed_type == capabilities.button.button.down
+    local fast_tap = custom_features.fast_tap_enabled(device, button_name)
+    if first_press and fast_tap then
+      custom_button_utils.emit_button_event(device, button_name, capabilities.button.button.pushed)
+      return -- Trigger on first press
+    elseif first_press and not fast_tap then
+      return -- Ignore first press because fast tap is disabled
+    elseif not first_press and fast_tap then
+      return -- Ignore, already triggered on first press
     end
 
     -- EXPOSE RELEASE TWEAK
@@ -163,31 +171,6 @@ local function symfonisk_dots_v2_handler(pressed_type)
   end
 end
 
-
--- The SYMFONISK has a wide variety of supported actions, added_handler must be custom handled
-local function update_supported_values(device)
-  for _, component in pairs(device.profile.components) do
-    local button_name = component.id
-    local number_of_buttons = button_name == "main" and 7 or 1 -- 7 buttons in total
-    local supported_pressed_types = {"pushed", "held"} -- default
-    if button_name == ButtonNames.PLAY or button_name == ButtonNames.PREV or button_name == ButtonNames.NEXT then
-      supported_pressed_types = {"pushed"} -- no held in play/prev/next
-    elseif button_name == "main" or button_name == ButtonNames.ONE_DOT or button_name == ButtonNames.TWO_DOTS then
-      supported_pressed_types = {"pushed", "held", "double"} -- native double-tap in dots and so in main
-    end
-    custom_features.may_insert_multitap_types(supported_pressed_types, device, button_name)
-    custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
-    device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
-  end
-end
-
-local function added_handler(self, device)
-  update_supported_values(device)
-  device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
-  device:emit_event(capabilities.button.button.pushed({state_change = false}))
-end
-
 local function info_changed(driver, device, event, args)
   local needs_press_type_change = 
     (args.old_st_store.preferences.multiTapEnabledPlay ~= device.preferences.multiTapEnabledPlay)
@@ -195,9 +178,10 @@ local function info_changed(driver, device, event, args)
     or (args.old_st_store.preferences.multiTapEnabledPrevNext ~= device.preferences.multiTapEnabledPrevNext)
     or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
     or (args.old_st_store.preferences.exposeReleaseActions ~= device.preferences.exposeReleaseActions)
+    or (args.old_st_store.preferences.fastTapDots ~= device.preferences.fastTapDots)
 
   if needs_press_type_change then
-    update_supported_values(device)
+    custom_features.update_pressed_types(device)
   end 
 end
 
@@ -227,7 +211,6 @@ local symfonisk_gen2 = {
     }
   },
   lifecycle_handlers = {
-    added = added_handler,
     infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)

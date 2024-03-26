@@ -123,7 +123,7 @@ preferences:
       default: 500
       maximum: 2000
   - name: "introReleased"
-    title: "EXPOSE RELEASE (firmware 1.0.35+)"
+    title: "EXPOSE RELEASE (FW 1.0.35+)"
     description: "Only for modern firmwares. Exposes the release of [ · ] or [ · · ] after Held as a \u0027Toggled up\u0027 action. You may have to exit the device screen and enter again to see the new option."
     required: true
     preferenceType: string
@@ -132,8 +132,24 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Toggled Up after Held [ · / · · ]"
+  - title: "Toggled Up on release [ · / · · ]"
     name: exposeReleaseActions
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - name: "introFastTap"
+    title: "FAST DOTS single-tap (FW 1.0.35+)"
+    description: "Only for modern firmwares. Makes dots single-tap quicker by triggering on first press. Disables double-tap and held actions. You may have to exit the device screen and enter again to see the changes."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Fast tap [ · / · · ] No held/double"
+    name: fastTapDots
     required: true
     preferenceType: boolean
     definition:

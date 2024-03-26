@@ -35,7 +35,6 @@ local mgmt_bind_resp = require "st.zigbee.zdo.mgmt_bind_response"
 local mgmt_bind_req = require "st.zigbee.zdo.mgmt_bind_request"
 local utils = require 'st.utils'
 local zdo_messages = require "st.zigbee.zdo"
-local supported_values = require "zigbee-multi-button.supported_values"
 local Groups = clusters.Groups
 local PowerConfiguration = clusters.PowerConfiguration
 local OnOff = clusters.OnOff
@@ -110,17 +109,10 @@ local do_configure = function(self, device)
 end
 
 local function added_handler(self, device)
-  local config = supported_values.get_device_parameters(device)
   for _, component in pairs(device.profile.components) do
-    local number_of_buttons = component.id == "main" and config.NUMBER_OF_BUTTONS or 1
-    if config ~= nil then
-      local supported_pressed_types = config.SUPPORTED_BUTTON_VALUES
-      custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
-      custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-      device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
-    else
-      device:emit_component_event(component, capabilities.button.supportedButtonValues({"pushed", "held"}, {visibility = { displayed = false }}))
-    end
+    local number_of_buttons = component.id == "main" and custom_features.default_button_count(device) or 1
+    local supported_pressed_types = custom_features.supported_pressed_types(device, component.id)
+    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})   
     device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
   end
   device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))

@@ -37,7 +37,7 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Toggled Up after Held"
+  - title: "Enable Toggled Up on release"
     name: exposeReleaseActions
     required: true
     preferenceType: boolean

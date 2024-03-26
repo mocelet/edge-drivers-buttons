@@ -13,14 +13,14 @@ components:
     categories:
       - name: RemoteController
   - id: button1
-    label: "Button1 [ · ]"
+    label: "Button 1 [ · ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
   - id: button2
-    label: "Button2 [ · · ]"
+    label: "Button 2 [ · · ]"
     capabilities:
       - id: button
         version: 1
@@ -37,15 +37,15 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Toggled Up after Held"
+  - title: "Enable Toggled Up on release"
     name: exposeReleaseActions
     required: true
     preferenceType: boolean
     definition:
       default: false    
   - name: "intro"
-    title: "Fast single-tap"
-    description: "Fast tap removes single-tap delay for quick response by triggering on first-press. Disables double-tap and hold functions."
+    title: "FAST single-tap"
+    description: "Makes single-tap quicker by triggering on first press. Disables double-tap and held actions. You may have to exit the device screen and enter again to see the changes."
     required: true
     preferenceType: string
     definition:
@@ -53,13 +53,13 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Fast tap B1 · (ignore hold/double)"
+  - title: "Fast tap [ · ] No held/double"
     name: fastTapButton1
     required: true
     preferenceType: boolean
     definition:
       default: false
-  - title: "Fast tap B2 · · (ignore hold/double)"
+  - title: "Fast tap [ · · ] No held/double"
     name: fastTapButton2
     required: true
     preferenceType: boolean
@@ -67,7 +67,7 @@ preferences:
       default: false
   - name: multiTapIntro
     title: "MULTI-TAP emulation"
-    description: "Note: SOMRIG may not send multiple quick consecutive taps, prefer a slow-pace. The button adds ~1 second delay for its native double-tap, expect additional delays. Uses hub timers. You may have to exit the device screen and enter again to see the new actions."
+    description: "SOMRIG may not send multiple quick consecutive taps, prefer a slow pace. The button adds ~1 second delay for its native double-tap, expect additional delays. Uses hub timers. You may have to exit the device screen and enter again to see the new actions."
     required: true
     preferenceType: string
     definition:
@@ -75,13 +75,13 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Multi-Tap B1 [ · ]"
+  - title: "Enable Multi-Tap [ · ]"
     name: multiTapEnabledB1
     required: true
     preferenceType: boolean
     definition:
       default: false
-  - title: "Enable Multi-Tap B2 [ · · ]"
+  - title: "Enable Multi-Tap [ · · ]"
     name: multiTapEnabledB2
     required: true
     preferenceType: boolean
@@ -105,13 +105,13 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Auto-repeat Hold B1 [ · ]"
+  - title: "Auto-repeat Hold [ · ]"
     name: autofireEnabledB1
     required: true
     preferenceType: boolean
     definition:
       default: false
-  - title: "Auto-repeat Hold B2 [ · · ]"
+  - title: "Auto-repeat Hold [ · · ]"
     name: autofireEnabledB2
     required: true
     preferenceType: boolean

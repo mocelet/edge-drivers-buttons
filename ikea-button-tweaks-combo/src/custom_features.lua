@@ -12,14 +12,19 @@
 
 --[[ mocelet 2024
  
-  Configuration file for the original custom tweaks like exposed release after hold,
-  multi-tap emulation or events auto-fire. Should be edited when adding custom tweaks to new 
+  Configuration file for all the device features and custom tweaks like Toggled Up on release,
+  multi-tap emulation, events auto-fire or fast-tap. Should be edited when adding new 
   devices.
 
-  Includes helper functions to populate the supported pressed types depending on
-  the enabled features (may_insert_xxx).
+  The stock supported_values file is no longer needed, it was not generic enough to cover buttons 
+  where each button has different features and led to having to create individual lifecycle handlers.
+
+  Includes helper functions to populate and update the supported pressed types, simplifying the
+  handlers for added and infoChanged events.
 
 ]]
+
+local capabilities = require "st.capabilities"
 
 local MULTITAP_ALL_TYPES_ID = {"pushed", "double", "pushed_3x", "pushed_4x", "pushed_5x", "pushed_6x"}    
 local EXPOSED_RELEASE_TYPE_ID = "up"
@@ -28,12 +33,51 @@ local RODRET = "RODRET Dimmer"
 local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
 local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
-local TRADFRI_ON_OFF = "TRADFRI on/off switch" -- binding done by stock drivers, isJoinable: false
-local TRADFRI_REMOTE = "TRADFRI remote control" -- binding done by stock drivers, isJoinable: false
+local TRADFRI_ON_OFF = "TRADFRI on/off switch"
+local TRADFRI_REMOTE = "TRADFRI remote control"
 
 local custom_features = {}
 
 -- DEVICE-SPECIFIC CONFIGURATION
+
+-- The number of buttons of the device
+function custom_features.default_button_count(device)
+  local model = device:get_model()
+  if model == TRADFRI_REMOTE or model == STYRBAR then
+    return 5 -- Styrbar has 4 + AnyArrow custom component
+  elseif model == SYMFONISK_GEN2 then
+    return 7
+  else
+    return 2 -- default, rodret, somrig, on/off
+  end
+end
+
+-- The default supported pressed types for each button of the device, not including tweaks
+function custom_features.default_button_pressed_types(device, button_name)
+  local model = device:get_model()
+  if model == SOMRIG then
+    return {"pushed", "held", "double"}
+  end
+
+  if model == SYMFONISK_GEN2 then
+    if button_name == "play" or button_name == "prev" or button_name == "next" then
+      return {"pushed"} -- no held
+    elseif button_name == "main" or button_name == "dot1" or button_name == "dot2" then
+      return {"pushed", "held", "double"} -- native double-tap in dots and so in main
+    end
+  end
+
+  if model == STYRBAR and button_name == "AnyArrow" then
+    return {"held"} -- Any Arrow is a tweak that only makes sense with Held
+  end
+
+  if model == TRADFRI_REMOTE and button_name == "button5" then
+    return {"pushed"} -- no held in Power button
+  end
+
+  return {"pushed", "held"} -- default
+end
+
 
 function custom_features.multitap_enabled(device, button_name)
   local model = device:get_model()
@@ -139,8 +183,37 @@ function custom_features.autofire_enabled(device, button_name)
   return false -- not supported
 end
 
+function custom_features.fast_tap_enabled(device, button_name)
+  local model = device:get_model()
+  
+  if model == SOMRIG then
+    if button_name == "main" then
+      return device.preferences.fastTapButton1 and device.preferences.fastTapButton2
+    else 
+      return button_name == "button1" and device.preferences.fastTapButton1 or button_name == "button2" and device.preferences.fastTapButton2
+    end
+  end
+
+  if model == SYMFONISK_GEN2 then
+    return device.preferences.fastTapDots and (button_name == "dot1" or button_name == "dot2")
+  end
+
+  return false
+end
 
 -- HELPER FUNCTIONS --
+
+function custom_features.supported_pressed_types(device, button_name)
+   -- Fast-Tap enabled buttons fire on first-press so they cannot have more actions than pressed
+  if custom_features.fast_tap_enabled(device, button_name) then
+    return {"pushed"}
+  end
+
+  local supported_pressed_types = custom_features.default_button_pressed_types(device, button_name)
+  custom_features.may_insert_multitap_types(supported_pressed_types, device, button_name)
+  custom_features.may_insert_exposed_release_type(supported_pressed_types, device, button_name)
+  return supported_pressed_types
+end
 
 function custom_features.may_insert_multitap_types(supported_pressed_types, device, component_id)
   if custom_features.multitap_enabled(device, component_id) then
@@ -157,5 +230,13 @@ function custom_features.may_insert_exposed_release_type(supported_pressed_types
     table.insert(supported_pressed_types, EXPOSED_RELEASE_TYPE_ID)
   end
 end
+
+function custom_features.update_pressed_types(device)
+  for _, component in pairs(device.profile.components) do
+    local supported_pressed_types = custom_features.supported_pressed_types(device, component.id)
+    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
+  end
+end
+
 
 return custom_features

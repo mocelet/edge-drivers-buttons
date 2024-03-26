@@ -70,15 +70,14 @@ local function build_somrig_button_handler(pressed_type)
     -- FAST TAP TWEAK
     -- When not enabled for a button, the initial press event is ignored (default behaviour)
     -- When enabled, the button triggers on the initial event and further (non initial) events are ignored
-
-    local fast_tap_enabled = {device.preferences.fastTapButton1, device.preferences.fastTapButton2}
-    if first_press and fast_tap_enabled[button_number] then
+    local fast_tap = custom_features.fast_tap_enabled(device, button_name)
+    if first_press and fast_tap then
       custom_button_utils.emit_button_event(device, button_name, capabilities.button.button.pushed)
-      return -- Fast tap triggers pushed on first-press
-    elseif first_press and not fast_tap_enabled[button_number] then
-      return -- Ignore first-press because fast-tap is disabled
-    elseif not first_press and fast_tap_enabled[button_number] then
-      return -- Ignore because fast tap already triggered on first-press
+      return -- Trigger on first press
+    elseif first_press and not fast_tap then
+      return -- Ignore first press because fast tap is disabled
+    elseif not first_press and fast_tap then
+      return -- Ignore, already triggered on first press
     end
 
     -- MULTI-TAP TWEAK
@@ -103,14 +102,11 @@ local function info_changed(driver, device, event, args)
   or (args.old_st_store.preferences.multiTapEnabledB1 ~= device.preferences.multiTapEnabledB1)
   or (args.old_st_store.preferences.multiTapEnabledB2 ~= device.preferences.multiTapEnabledB2)
   or (args.old_st_store.preferences.multiTapMaxPresses ~= device.preferences.multiTapMaxPresses)
+  or (args.old_st_store.preferences.fastTapButton1 ~= device.preferences.fastTapButton1)
+  or (args.old_st_store.preferences.fastTapButton2 ~= device.preferences.fastTapButton2)
 
   if needs_press_type_change then
-    for _, component in pairs(device.profile.components) do
-        local supported_pressed_types = {"pushed", "held", "double"} -- default
-        custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
-        custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-        device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
-    end
+    custom_features.update_pressed_types(device)
   end 
 end
 

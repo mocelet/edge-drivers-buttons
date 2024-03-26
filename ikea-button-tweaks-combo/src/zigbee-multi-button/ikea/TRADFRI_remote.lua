@@ -76,25 +76,6 @@ local function released_button_handler(pressed_type)
   end
 end
 
--- TRADFRI has a variety of supported actions
-local function update_supported_values(device)
-  for _, component in pairs(device.profile.components) do
-    local supported_pressed_types = {"pushed", "held"} -- default
-    if component.id == ButtonNames.TOGGLE then
-      supported_pressed_types = {"pushed"}
-    end
-    custom_features.may_insert_multitap_types(supported_pressed_types, device, component.id)
-    custom_features.may_insert_exposed_release_type(supported_pressed_types, device, component.id)
-    device:emit_component_event(component, capabilities.button.supportedButtonValues(supported_pressed_types), {visibility = { displayed = false }})
-  end
-end
-
-local function added_handler(self, device)
-  update_supported_values(device)
-  device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
-  device:emit_event(capabilities.button.button.pushed({state_change = false}))
-end
-
 local function info_changed(driver, device, event, args)
   local needs_press_type_change = 
     (args.old_st_store.preferences.exposeReleaseActions ~= device.preferences.exposeReleaseActions)
@@ -103,7 +84,7 @@ local function info_changed(driver, device, event, args)
     or (args.old_st_store.preferences.multiTapEnabledPrevNext ~= device.preferences.multiTapEnabledPrevNext)
 
   if needs_press_type_change then
-    update_supported_values(device)
+    custom_features.update_pressed_types(device)
   end 
 end
 
@@ -160,7 +141,6 @@ local tradfri_remote = {
     },
   },
   lifecycle_handlers = {
-    added = added_handler,
     infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)
