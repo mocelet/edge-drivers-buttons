@@ -25,6 +25,9 @@ Toggled-Up support to expose a release after long-press.
 Multi-tap custom tweak with specific windows for after first-press and after pushed/double
 to account for the native double-tap mechanism.
 
+Detects 'ghost' events that are not actual taps and have been observed 
+after a 0x04 (release event), possibly due to bad debouncing.
+
 ]]
 
 local capabilities = require "st.capabilities"
@@ -34,6 +37,9 @@ local log = require "log"
 
 local MULTITAP_SOMRIG_FIRST_PRESS_WINDOW_MILLIS = 900 -- SOMRIG takes ~700-800ms to notify a pushed/double after first_press
 local MULTITAP_SOMRIG_WINDOW_MILLIS = 1000 -- time to wait after a pushed/double event for the next first_press
+
+local GHOSTBUSTER_HINT_PREFIX = "ghostbuster.hint."
+local GHOSTBUSTER_TIME_PREFIX = "ghostbuster.time."
 
 local BUTTON_1 = "button1"
 local BUTTON_2 = "button2"
@@ -61,7 +67,36 @@ local function build_somrig_button_handler(pressed_type)
     if has_multitap and first_press then
       custom_button_utils.multitap_first_press_hint(device, button_name, MULTITAP_SOMRIG_FIRST_PRESS_WINDOW_MILLIS)
     end
-    
+
+    -- GHOSTBUSTER tweak
+    -- Somrig might send ghost tap events after a long press following the release
+    -- due to a bad debouncing mechanism. Actual taps follow a first-press, which the firmware skips too.
+    -- The strategy: store the last hint received (the release or first-press event) and its timestamp. 
+    -- When a tap is received, check it was not a recent release.
+
+    local hint_key = GHOSTBUSTER_HINT_PREFIX .. button_name
+    local time_key = GHOSTBUSTER_TIME_PREFIX .. button_name
+    local hint = pressed_type == capabilities.button.button.up or pressed_type == capabilities.button.button.down
+    local tap = pressed_type == capabilities.button.button.pushed or pressed_type == capabilities.button.button.double
+
+    if hint then
+      device:set_field(hint_key, pressed_type)
+      device:set_field(time_key, os.time())
+    end
+
+    if tap then 
+      local last_hint = device:get_field(hint_key)
+      local last_time = device:get_field(time_key)
+      
+      local elapsed = last_time and os.difftime(os.time(), last_time) or -1
+
+      if last_hint == capabilities.button.button.up and elapsed >= 0 and elapsed <= 1 then
+        log.debug("Ghost event suppressed")
+        return -- ignore ghost
+      end
+    end
+
+
     -- EXPOSE RELEASE TWEAK
     if pressed_type == capabilities.button.button.up and not device.preferences.exposeReleaseActions then
       return -- ignore the event, not exposed
