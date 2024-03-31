@@ -37,6 +37,7 @@ local OnOff = clusters.OnOff
 local PowerConfiguration = clusters.PowerConfiguration
 local lua_socket = require "socket" -- Just to use gettime() which is more accurate
 
+local LAST_HELD_EMIT_TIME_PREFIX = "symfonisk.held.emit.time."
 local LAST_VOLUME_HELD_TIME_PREFIX = "symfonisk.volume.held.time."
 local IGNORE_HELD_THRESHOLD = 1 -- Usually held events are spaced 400ms but I've seen 700ms and 800ms so 1 second
 
@@ -92,6 +93,21 @@ local function symfonisk_plus_minus_handler(pressed_type)
       end
     end
   
+    -- HELD EMIT RATE LIMITER TWEAK
+    if pressed_type == capabilities.button.button.held then
+      local now = lua_socket.gettime()
+      local min_interval = device.preferences.heldMinInterval and device.preferences.heldMinInterval / 1000 or 0
+      local emit_time_key = LAST_HELD_EMIT_TIME_PREFIX .. button_name
+      local last_emit_time = device:get_field(emit_time_key)
+      if last_emit_time then
+        local elapsed = now - last_emit_time
+        if elapsed > 0 and elapsed < min_interval then
+          return -- ignore event to limit emit rate
+        end
+      end
+      device:set_field(emit_time_key, now)
+    end
+
     emit_button_event_multitap_hook(device, button_name, pressed_type)
   end
 end

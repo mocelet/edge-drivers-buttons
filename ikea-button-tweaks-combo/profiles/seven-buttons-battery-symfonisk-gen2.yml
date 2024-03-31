@@ -64,7 +64,7 @@ components:
 preferences:      
   - name: intro
     title: "SYMFONISK tweaks"
-    description: "Holding [ + ] or [ - ] generates multiple Held events while pressed. The driver can suppress the repetitions so the Held action is only executed once, useful when you want Held to toggle things."
+    description: "Holding [ + ] or [ - ] generates multiple events per second. The driver can suppress the repetitions so the Held action is only executed once, useful when you want Held to toggle things. Alternatively, it can modify the rate at which repeated Held actions are executed by setting a minimum interval."
     required: true
     preferenceType: string
     definition:
@@ -78,6 +78,14 @@ preferences:
     preferenceType: boolean
     definition:
       default: false
+  - title: "Min Held repeat interval (def: 0 ms)"
+    name: heldMinInterval
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 0
+      default: 0
+      maximum: 1500
   - name: multiTapIntro
     title: "MULTI-TAP emulation"
     description: "Adds double-tap up to 6x-tap. Buttons may implement debouncing and not register consecutive taps, find a pace that works. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
