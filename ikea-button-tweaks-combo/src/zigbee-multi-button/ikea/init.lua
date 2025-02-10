@@ -12,15 +12,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
---[[ mocelet 2024
+--[[ mocelet 2025
 
 Based on stock init.lua with custom modifications to support the new buttons
 and fix battery reporting depending on firmware:
 
 - do_configure includes specific bindings for each model.
 - Hooks for new expose release and multi-tap custom features in added_handler.
-- New has_old_ikea_firmware function to detect pre-2023 firmwares with different
-  battery reporting affecting STYRBAR as well as TRADFRI models.
+- Function has_old_ikea_firmware to detect pre-2023 firmwares with different
+  battery reporting and binding affecting STYRBAR as well as TRADFRI models.
 - Improved battery_perc_attr_handler to account for old firmwares.
 
 ]]
@@ -43,6 +43,7 @@ local ENTRIES_READ = "ENTRIES_READ"
 local log = require "log"
 
 local custom_features = require "custom_features"
+local has_old_ikea_firmware
 
 local RODRET = "RODRET Dimmer"
 local SOMRIG = "SOMRIG shortcut button"
@@ -123,6 +124,7 @@ local function zdo_binding_table_handler(driver, device, zb_rx)
   for _, binding_table in pairs(zb_rx.body.zdo_body.binding_table_entries) do
     if binding_table.dest_addr_mode.value == binding_table.DEST_ADDR_MODE_SHORT then
       -- send add hub to zigbee group command
+      log.debug("Adding hub to group")
       driver:add_hub_to_zigbee_group(binding_table.dest_addr.value)
       return
     end
@@ -150,15 +152,22 @@ local function zdo_binding_table_handler(driver, device, zb_rx)
     local binding_table_cmd = messages.ZigbeeMessageTx({ address_header = addr_header, body = message_body })
     device:send(binding_table_cmd)
   else
-    driver:add_hub_to_zigbee_group(0x0000) -- fallback if no binding table entries found
-    device:send(Groups.commands.AddGroup(device, 0x0000))
+    -- Old firmwares required group binding to send events as explained
+    -- at https://community.smartthings.com/t/ikea-tradfri-5-button-buttons-and-events-not-working/290016/12 
+    -- The original fallback had no effect in new firmwares since IKEA removed Groups cluster but latest firmwares 
+    -- brought it back. We do not want new versions to be added to the group as they already use direct bindings.
+    if has_old_ikea_firmware(device) then
+      log.debug("Adding hub and button to group 0")
+      driver:add_hub_to_zigbee_group(0x0000) -- fallback if no binding table entries found
+      device:send(Groups.commands.AddGroup(device, 0x0000))
+    end
   end
 end
 
 
 --[[
   Identifies old IKEA firmwares, the ones reporting full battery level 
-  as 100 instead of the standard 200.
+  as 100 instead of the standard 200 as well as requiring group bindings.
 
   Rodret, Somrig and Symfonisk are new models, no problem there.
   Styrbar has old versions like 00010024, new started in 02040005 (2.4.x)
@@ -167,13 +176,14 @@ end
   Tradri on/off has old versions like 22010631, new started in 24040006 (24.x)
   Source for Tradfri: https://github.com/zigpy/zha-device-handlers/issues/2203
 ]]
-function has_old_ikea_firmware(device)
+has_old_ikea_firmware = function(device)
   local model = device:get_model()
   if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
     return false -- modern devices, check not needed
   end
 
   -- Check firmware
+  -- device.data.firmwareFullVersion seems to be nil with some firmwares, hopefully only old ones
   local firmware_full_version = device.data.firmwareFullVersion or "00"
   local version_1 = tonumber(firmware_full_version:sub(1,1), 16)
   local version_2 = tonumber(firmware_full_version:sub(2,2), 16)
