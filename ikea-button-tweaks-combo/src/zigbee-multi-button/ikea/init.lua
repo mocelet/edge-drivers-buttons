@@ -89,24 +89,27 @@ local do_configure = function(self, device)
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1))
   end
 
-  -- Read binding table
-  local addr_header = messages.AddressHeader(
-    constants.HUB.ADDR,
-    constants.HUB.ENDPOINT,
-    device:get_short_address(),
-    device.fingerprinted_endpoint_id,
-    constants.ZDO_PROFILE_ID,
-    mgmt_bind_req.BINDING_TABLE_REQUEST_CLUSTER_ID
-  )
-  local binding_table_req = mgmt_bind_req.MgmtBindRequest(0) -- Single argument of the start index to query the table
-  local message_body = zdo_messages.ZdoMessageBody({
-                                                   zdo_body = binding_table_req
-                                                 })
-  local binding_table_cmd = messages.ZigbeeMessageTx({
-                                                     address_header = addr_header,
-                                                     body = message_body
-                                                   })
-  device:send(binding_table_cmd)
+  local needs_group_binding = has_old_ikea_firmware(device)
+  if needs_group_binding then
+    -- Read binding table
+    local addr_header = messages.AddressHeader(
+      constants.HUB.ADDR,
+      constants.HUB.ENDPOINT,
+      device:get_short_address(),
+      device.fingerprinted_endpoint_id,
+      constants.ZDO_PROFILE_ID,
+      mgmt_bind_req.BINDING_TABLE_REQUEST_CLUSTER_ID
+    )
+    local binding_table_req = mgmt_bind_req.MgmtBindRequest(0) -- Single argument of the start index to query the table
+    local message_body = zdo_messages.ZdoMessageBody({
+                                                    zdo_body = binding_table_req
+                                                  })
+    local binding_table_cmd = messages.ZigbeeMessageTx({
+                                                      address_header = addr_header,
+                                                      body = message_body
+                                                    })
+    device:send(binding_table_cmd)
+  end
 end
 
 local function added_handler(self, device)
