@@ -91,7 +91,8 @@ local zigbee_button_driver_template = {
     require("zigbee-multi-button.ikea"),
   },
   -- tweak: removed lifecycle_handler and added_handler function
-  ias_zone_configuration_method = constants.IAS_ZONE_CONFIGURE_TYPE.AUTO_ENROLL_RESPONSE
+  ias_zone_configuration_method = constants.IAS_ZONE_CONFIGURE_TYPE.AUTO_ENROLL_RESPONSE,
+  health_check = false -- from https://github.com/SmartThingsCommunity/SmartThingsEdgeDrivers/pull/2231
 }
 
 defaults.register_for_default_handlers(zigbee_button_driver_template, zigbee_button_driver_template.supported_capabilities)
