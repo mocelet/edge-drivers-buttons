@@ -106,7 +106,7 @@ local on_off_switch = {
     infoChanged = info_changed
   },
   can_handle = function(opts, driver, device, ...)
-    return device:get_model() == "RODRET Dimmer" or device:get_model() == "TRADFRI on/off switch"
+    return device:get_model() == "RODRET Dimmer" or device:get_model() == "RODRET wireless dimmer" or device:get_model() == "TRADFRI on/off switch"
   end
 }
 

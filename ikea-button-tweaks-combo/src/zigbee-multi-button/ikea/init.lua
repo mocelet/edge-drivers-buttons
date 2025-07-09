@@ -46,6 +46,7 @@ local custom_features = require "custom_features"
 local has_old_ikea_firmware
 
 local RODRET = "RODRET Dimmer"
+local RODRET_2 = "RODRET wireless dimmer" -- New fingerprint
 local SOMRIG = "SOMRIG shortcut button"
 local STYRBAR = "Remote Control N2"
 local SYMFONISK_GEN2 = "SYMFONISK sound remote gen2"
@@ -57,7 +58,7 @@ local do_configure = function(self, device)
   local model = device:get_model()
   
   -- tweaks: each model has specific bindings, did not want subdrivers to handle doConfigure lifecycle
-  if model == RODRET or model == TRADFRI_ON_OFF then 
+  if model == RODRET or model == RODRET_2 or model == TRADFRI_ON_OFF then 
     device:send(device_management.build_bind_request(device, OnOff.ID, self.environment_info.hub_zigbee_eui))
     device:send(device_management.build_bind_request(device, Level.ID, self.environment_info.hub_zigbee_eui))  
   elseif model == SOMRIG then
@@ -81,7 +82,7 @@ local do_configure = function(self, device)
   end
  
   -- tweaks: battery fix in RODRET inspired by Vallhorn drivers by the great Mariano (Mc)
-  if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
+  if model == RODRET or model == RODRET_2 or model == SOMRIG or model == SYMFONISK_GEN2 then
     device:send(device_management.build_bind_request(device, PowerConfiguration.ID, self.environment_info.hub_zigbee_eui, 1):to_endpoint(1))
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1):to_endpoint(1))
   elseif model == STYRBAR or model == TRADFRI_REMOTE or model == TRADFRI_ON_OFF then
@@ -181,7 +182,7 @@ end
 ]]
 has_old_ikea_firmware = function(device)
   local model = device:get_model()
-  if model == RODRET or model == SOMRIG or model == SYMFONISK_GEN2 then
+  if model == RODRET or model == RODRET_2 or model == SOMRIG or model == SYMFONISK_GEN2 then
     return false -- modern devices, check not needed
   end
 

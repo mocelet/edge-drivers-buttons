@@ -4,6 +4,11 @@ zigbeeManufacturer:
     manufacturer: IKEA of Sweden
     model: RODRET Dimmer
     deviceProfileName: two-buttons-battery-rodret
+  - id: "IKEA of Sweden/RODRET Dimmer 2"
+    deviceLabel: RODRET Button
+    manufacturer: IKEA of Sweden
+    model: RODRET wireless dimmer
+    deviceProfileName: two-buttons-battery-rodret    
   - id: "IKEA/SOMRIG"
     deviceLabel: SOMRIG Button
     manufacturer: IKEA of Sweden
