@@ -113,6 +113,13 @@ local do_configure = function(self, device)
   end
 end
 
+-- Avoids issues during hub switch-over: https://github.com/SmartThingsCommunity/SmartThingsEdgeDrivers/pull/2412
+local function emit_event_if_latest_state_missing(device, component, capability, attribute_name, value)
+  if device:get_latest_state(component, capability.ID, attribute_name) == nil then
+    device:emit_event(value)
+  end
+end
+
 local function added_handler(self, device)
   for _, component in pairs(device.profile.components) do
     local number_of_buttons = component.id == "main" and custom_features.default_button_count(device) or 1
@@ -121,7 +128,7 @@ local function added_handler(self, device)
     device:emit_component_event(component, capabilities.button.numberOfButtons({value = number_of_buttons}))
   end
   device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:read(device))
-  device:emit_event(capabilities.button.button.pushed({state_change = false}))
+  emit_event_if_latest_state_missing(device, "main", capabilities.button, capabilities.button.button.NAME, capabilities.button.button.pushed({state_change = false}))
 end
 
 local function zdo_binding_table_handler(driver, device, zb_rx)
