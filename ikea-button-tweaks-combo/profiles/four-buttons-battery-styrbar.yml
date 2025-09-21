@@ -153,3 +153,19 @@ preferences:
       minimum: 300
       default: 1000
       maximum: 5000
+  - name: introOldFix
+    title: "OLD Firmwares"
+    description: "Versions before 2.4.5 (02040005) may display half the battery life if version not reported to the driver. Enable fix if needed."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 0
+      maxLength: 0
+      default: ""
+  - title: "Enable old firmware fix"
+    name: isOldFirmware
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false

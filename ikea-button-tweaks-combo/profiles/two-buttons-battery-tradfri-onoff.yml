@@ -1,9 +1,4 @@
-# Using same button IDs of the stock driver so people changing the driver
-# coming from stock do not have to rebuild automations.
-# New order and labels, who would guess button5 is the largest :)
-# There is no multi-tap for arrows, they have extreme debouncing in place.
-
-name: five-buttons-battery-tradfri-remote
+name: two-buttons-battery-tradfri-onoff
 components:
   - id: main
     capabilities:
@@ -17,45 +12,24 @@ components:
         version: 1
     categories:
       - name: RemoteController
-  - id: button5
-    label: "1. [ POWER ]"
+  - id: button2
+    label: "Button [ I ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
   - id: button1
-    label: "2. Top [ * ]"  
+    label: "Button [ O ]"
     capabilities:
       - id: button
         version: 1
     categories:
       - name: RemoteController
-  - id: button3
-    label: "3. Bottom [ o ]"  
-    capabilities:
-      - id: button
-        version: 1
-    categories:
-      - name: RemoteController
-  - id: button4
-    label: "4. Left [ < ]"  
-    capabilities:
-      - id: button
-        version: 1
-    categories:
-      - name: RemoteController
-  - id: button2
-    label: "5. Right [ > ]"  
-    capabilities:
-      - id: button
-        version: 1
-    categories:
-      - name: RemoteController
-preferences:      
-  - name: intro
+preferences:
+  - name: "intro"
     title: "TRADFRI tweaks"
-    description: "Exposes the release of Top or Bottom after Held as a \u0027Toggled up\u0027. You may have to exit the device screen and enter again to see the new action."
+    description: "Exposes the release of any button after Held as a \u0027Toggled up\u0027. You may have to exit the device screen and enter again to see the new action."
     required: true
     preferenceType: string
     definition:
@@ -71,7 +45,7 @@ preferences:
       default: false
   - name: multiTapIntro
     title: "MULTI-TAP emulation"
-    description: "Buttons may implement debouncing and not register consecutive taps or take too much time to send the next press, find a pace and waiting time that works. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
+    description: "Up to 6x multi-tap. Uses hub timers, might introduce extra delays. You may have to exit the device screen and enter again to see the new actions."
     required: true
     preferenceType: string
     definition:
@@ -79,19 +53,19 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Enable Multi-Tap [ POWER ]"
-    name: multiTapEnabledToggle
-    required: true
-    preferenceType: boolean
-    definition:
-      default: false
-  - title: "Enable Multi-Tap [ * / o ]"
-    name: multiTapEnabledPlusMinus
+  - title: "Enable Multi-Tap [ I ]"
+    name: multiTapEnabledB2
     required: true
     preferenceType: boolean
     definition:
       default: false      
-  - title: "Max multi-taps (2x to 6x)"
+  - title: "Enable Multi-Tap [ O ]"
+    name: multiTapEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Max multi-taps (up to 6x)"
     name: multiTapMaxPresses
     required: true
     preferenceType: number
@@ -99,17 +73,17 @@ preferences:
       minimum: 2
       default: 2
       maximum: 6
-  - title: "Next tap waiting time (def: 1000 ms)"
+  - title: "Next tap waiting time (def: 500 ms)"
     name: multiTapDelayMillis
     required: true
     preferenceType: number
     definition:
-      minimum: 300
-      default: 1000
-      maximum: 3000
+      minimum: 200
+      default: 500
+      maximum: 2000
   - name: autofireIntro
     title: "AUTO-FIRE on hold emulation"
-    description: "Periodically repeats the \u0027Held\u0027 event of Top and Bottom buttons while held. Meant to use with drivers that support changing brightness by steps, e.g. 10% more / less. Uses hub timers."
+    description: "Periodically repeats the \u0027Held\u0027 event while the button is held. Meant to use with drivers that support changing brightness by steps, e.g. 10% more / less. Uses hub timers."
     required: true
     preferenceType: string
     definition:
@@ -117,12 +91,18 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Auto-repeat Hold [ * / o ]"
-    name: autofireEnabled
+  - title: "Auto-repeat Hold [ I ]"
+    name: autofireEnabledB2
     required: true
     preferenceType: boolean
     definition:
       default: false      
+  - title: "Auto-repeat Hold [ O ]"
+    name: autofireEnabledB1
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
   - title: "Max repetitions (def: 10)"
     name: autofireMaxLoops
     required: true

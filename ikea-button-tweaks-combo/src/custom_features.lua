@@ -53,6 +53,18 @@ function custom_features.default_button_count(device)
   end
 end
 
+-- Battery type and quantity to display in SmartThings app
+function custom_features.battery_info(device)
+  local model = device:get_model()
+  if model == RODRET or model == RODRET_2 or model == SOMRIG then
+    return "AAA", 1
+  elseif model == STYRBAR or model == SYMFONISK_GEN2 then
+    return "AAA", 2
+  elseif model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE then
+    return "CR2032", 1
+  end
+end
+
 -- The default supported pressed types for each button of the device, not including tweaks
 function custom_features.default_button_pressed_types(device, button_name)
   local model = device:get_model()

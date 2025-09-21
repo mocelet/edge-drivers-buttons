@@ -90,7 +90,7 @@ local do_configure = function(self, device)
     device:send(PowerConfiguration.attributes.BatteryPercentageRemaining:configure_reporting(device, 30, 21600, 1))
   end
 
-  local needs_group_binding = has_old_ikea_firmware(device)
+  local needs_group_binding = has_old_ikea_firmware(device, true) -- if unknown, assume it needs them to avoid incorrect bindings
   if needs_group_binding then
     -- Read binding table
     local addr_header = messages.AddressHeader(
@@ -117,6 +117,15 @@ end
 local function emit_event_if_latest_state_missing(device, component, capability, attribute_name, value)
   if device:get_latest_state(component, capability.ID, attribute_name) == nil then
     device:emit_event(value)
+  end
+end
+
+local function init_handler(self, device)
+  local model = device:get_model()
+  local battery_type, battery_quantity = custom_features.battery_info(device)
+  if battery_type and battery_quantity then
+    emit_event_if_latest_state_missing(device, "main", capabilities.battery, capabilities.battery.type.NAME, capabilities.battery.type(battery_type))
+    emit_event_if_latest_state_missing(device, "main", capabilities.battery, capabilities.battery.quantity.NAME, capabilities.battery.quantity(battery_quantity))
   end
 end
 
@@ -167,7 +176,7 @@ local function zdo_binding_table_handler(driver, device, zb_rx)
     -- at https://community.smartthings.com/t/ikea-tradfri-5-button-buttons-and-events-not-working/290016/12 
     -- The original fallback had no effect in new firmwares since IKEA removed Groups cluster but latest firmwares 
     -- brought it back. We do not want new versions to be added to the group as they already use direct bindings.
-    if has_old_ikea_firmware(device) then
+    if has_old_ikea_firmware(device, true) then
       log.debug("Adding hub and button to group 0")
       driver:add_hub_to_zigbee_group(0x0000) -- fallback if no binding table entries found
       device:send(Groups.commands.AddGroup(device, 0x0000))
@@ -183,19 +192,32 @@ end
   Rodret, Somrig and Symfonisk are new models, no problem there.
   Styrbar has old versions like 00010024, new started in 02040005 (2.4.x)
   
-  Tradfri remote has old versions like 12214572, new started in 24040006 (24.x)
+  Tradfri remote has old versions like 12214572, new started in 24040005 (24.x)
   Tradri on/off has old versions like 22010631, new started in 24040006 (24.x)
   Source for Tradfri: https://github.com/zigpy/zha-device-handlers/issues/2203
 ]]
-has_old_ikea_firmware = function(device)
+has_old_ikea_firmware = function(device, default_value_if_unknown)
   local model = device:get_model()
   if model == RODRET or model == RODRET_2 or model == SOMRIG or model == SYMFONISK_GEN2 then
     return false -- modern devices, check not needed
   end
 
   -- Check firmware
-  -- device.data.firmwareFullVersion seems to be nil with some firmwares, hopefully only old ones
-  local firmware_full_version = device.data.firmwareFullVersion or "00"
+  -- Note device.data.firmwareFullVersion seems to be no longer supported by SmartThings, the value
+  -- is not updated anymore and newly added devices do not have the attribute (nil)
+  local firmware_full_version = device.data.firmwareFullVersion
+  local valid = type(firmware_full_version) == "string" and #firmware_full_version == 8
+  if not valid then
+    -- There is no fail-proof workaround to detect old firmwares. Checking for Groups cluster 
+    -- does not work with some firmwares and currentVersion attribute in firmwareUpdate 
+    -- capability is always nil when doing a device:get_latest_state.
+    -- A false negative breaks correct bindings in old firmwares of TRADFRI and STYRBAR,
+    -- while a false positive breaks correct battery readings so let the caller set
+    -- the default value depending on the context.
+    log.debug("Unknown firmware version. Using provided default for has_old_ikea_firmware: ", default_value_if_unknown)
+    return default_value_if_unknown
+  end
+  -- Valid firmware version
   local version_1 = tonumber(firmware_full_version:sub(1,1), 16)
   local version_2 = tonumber(firmware_full_version:sub(2,2), 16)
   log.debug("Firmware: " .. firmware_full_version .. ". Keys: " .. version_1 .. "," .. version_2)
@@ -212,8 +234,13 @@ end
 
 local battery_perc_attr_handler = function(driver, device, value, zb_rx)
   -- Battery readings depends on the model and firmware version.
-  -- See has_old_ikea_firmware function
-  local reported_value = has_old_ikea_firmware(device) and value.value or utils.round(value.value / 2)
+  local model = device:get_model()
+  -- Unknown firmware version only matters in STYRBAR and TRADFRI
+  local assume_old_if_unknown = device.preferences.isOldFirmware -- STYRBAR
+  if model == TRADFRI_ON_OFF or model == TRADFRI_REMOTE then
+    assume_old_if_unknown = not device.preferences.isNewFirmware
+  end
+  local reported_value = has_old_ikea_firmware(device, assume_old_if_unknown) and value.value or utils.round(value.value / 2)
   local percentage = utils.clamp_value(reported_value, 0, 100)
   device:emit_event(capabilities.battery.battery(percentage))
 end
@@ -222,7 +249,8 @@ local ikea_of_sweden = {
   NAME = "IKEA Sweden",
   lifecycle_handlers = {
     doConfigure = do_configure,
-    added = added_handler
+    added = added_handler,
+    init = init_handler
   },
   zigbee_handlers = {
     zdo = {

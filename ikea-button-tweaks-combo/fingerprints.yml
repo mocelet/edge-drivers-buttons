@@ -28,7 +28,7 @@ zigbeeManufacturer:
     deviceLabel: TRADFRI Button
     manufacturer: IKEA of Sweden
     model: TRADFRI on/off switch
-    deviceProfileName: two-buttons-battery-rodret
+    deviceProfileName: two-buttons-battery-tradfri-onoff
   - id: "IKEA/TRADFRI remote"
     deviceLabel: TRADFRI Button
     manufacturer: IKEA of Sweden
