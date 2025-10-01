@@ -108,8 +108,8 @@ preferences:
       default: 1000
       maximum: 3000
   - name: autofireIntro
-    title: "AUTO-FIRE on hold emulation"
-    description: "Periodically repeats the \u0027Held\u0027 event of Top and Bottom buttons while held. Meant to use with drivers that support changing brightness by steps, e.g. 10% more / less. Uses hub timers."
+    title: "AUTO-REPEAT Held emulation"
+    description: "Periodically repeats the \u0027Held\u0027 event of Top and Bottom buttons while held. Useful with drivers that support steps, e.g. 10% more brightness. Uses hub timers."
     required: true
     preferenceType: string
     definition:
@@ -117,7 +117,7 @@ preferences:
       minLength: 0
       maxLength: 0
       default: ""
-  - title: "Auto-repeat Hold [ * / o ]"
+  - title: "Auto-repeat Held [ * / o ]"
     name: autofireEnabled
     required: true
     preferenceType: boolean
