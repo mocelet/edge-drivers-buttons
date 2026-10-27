@@ -154,6 +154,12 @@ function custom_features.multitap_native_count(device, button_name)
     return device:get_model() == SOMRIG and 2 or 1 -- SOMRIG has native double-tap
 end
 
+-- STYRBAR arrows with auto-repeat report their release as 'up' (Toggled up)
+function custom_features.arrow_release_enabled(device, button_name)
+  return device:get_model() == STYRBAR and custom_features.autofire_enabled(device, button_name)
+    and (button_name == "Left" or button_name == "Right" or button_name == "AnyArrow")
+end
+
 function custom_features.expose_release_enabled(device, button_name)
   local model = device:get_model()
   if model == STYRBAR then
@@ -187,6 +193,8 @@ function custom_features.autofire_enabled(device, button_name)
   
   if model == STYRBAR then
     return button_name == "Top" and device.preferences.autofireEnabledOn or button_name == "Bottom" and device.preferences.autofireEnabledOff
+      or button_name == "Left" and device.preferences.autofireEnabledPrev or button_name == "Right" and device.preferences.autofireEnabledNext
+      or button_name == "AnyArrow" and (device.preferences.autofireEnabledPrev or device.preferences.autofireEnabledNext)
   end
 
   if model == TRADFRI_REMOTE then
@@ -225,6 +233,9 @@ function custom_features.supported_pressed_types(device, button_name)
   local supported_pressed_types = custom_features.default_button_pressed_types(device, button_name)
   custom_features.may_insert_multitap_types(supported_pressed_types, device, button_name)
   custom_features.may_insert_exposed_release_type(supported_pressed_types, device, button_name)
+  if custom_features.arrow_release_enabled(device, button_name) then
+    table.insert(supported_pressed_types, EXPOSED_RELEASE_TYPE_ID)
+  end
   return supported_pressed_types
 end
 

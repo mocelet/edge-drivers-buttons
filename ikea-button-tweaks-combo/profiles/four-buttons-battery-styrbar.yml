@@ -137,6 +137,19 @@ preferences:
     preferenceType: boolean
     definition:
       default: false      
+  - title: "Auto-repeat Held Left [ < ]"
+    name: autofireEnabledPrev
+    description: "Repeats until the arrow is released, then sends Toggled up. Any Arrow repeats from the start of the hold until the arrow is known (~2 s), or sends Toggled up if released before."
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
+  - title: "Auto-repeat Held Right [ > ]"
+    name: autofireEnabledNext
+    required: true
+    preferenceType: boolean
+    definition:
+      default: false
   - title: "Max repetitions (def: 10)"
     name: autofireMaxLoops
     required: true
@@ -147,6 +160,22 @@ preferences:
       maximum: 100
   - title: "Repetition delay (def: 1000 ms)"
     name: autofireDelay
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 300
+      default: 1000
+      maximum: 5000
+  - title: "Arrow max repeats (def: 12)"
+    name: arrowAutofireMaxLoops
+    required: true
+    preferenceType: number
+    definition:
+      minimum: 1
+      default: 12
+      maximum: 100
+  - title: "Arrow repeat delay (def: 1000 ms)"
+    name: arrowAutofireDelay
     required: true
     preferenceType: number
     definition:

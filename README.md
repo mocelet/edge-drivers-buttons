@@ -9,7 +9,7 @@ Edge driver for the SmartThings Hub with custom tweaks to support modern Zigbee 
 - Multi-tap emulation up to 6X to enable double-tap, triple-tap, etc.
 - Auto-fire on hold emulation to generate events while Held.
 - Fast single-tap mode in SOMRIG to trigger on first-press and avoid the delay created by its native double-tap window.
-- Fully functional arrows in STYRBAR. Handles the _messaging feast_ produced by long-pressing arrows and suppresses the ghost On messages. The included 'Any Arrow' component adds a held action that will trigger earlier since the button takes 2 seconds to notify which arrow was held.
+- Fully functional arrows in STYRBAR. Handles the _messaging feast_ produced by long-pressing arrows and suppresses the ghost On messages. The included 'Any Arrow' component adds a held action that will trigger earlier since the button takes 2 seconds to notify which arrow was held. Arrows can auto-fire while held and report Toggled-Up when released.
 - Can suppress Held repetitions in SYMFONISK Gen 2 to avoid repeating the Held action multiple times.
 
 ## Notes for End Users

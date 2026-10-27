@@ -35,6 +35,7 @@ local AUTOFIRE_TIMER = "button.autofire.timer"
 local AUTOFIRE_LOOP_COUNT = "button.autofire.loop.count"
 local AUTOFIRE_MAX_LOOPS = "button.autofire.loop.max"
 local AUTOFIRE_DELAY = "button.autofire.delay"
+local AUTOFIRE_ON_FINISH = "button.autofire.on.finish"
 
 local AUTOFIRE_DEFAULT_DELAY = 1 -- seconds
 local AUTOFIRE_DEFAULT_MAX_LOOPS = 10
@@ -182,6 +183,7 @@ custom_button_utils.autofire_stop = function(device)
     device:set_field(AUTOFIRE_TIMER, nil)
     device:set_field(AUTOFIRE_LOOP_COUNT, nil)
   end
+  device:set_field(AUTOFIRE_ON_FINISH, nil)
 end
 
 local function autofire_callback(device, button_name, pressed_type)
@@ -203,13 +205,18 @@ local function autofire_callback(device, button_name, pressed_type)
       device:set_field(AUTOFIRE_TIMER, timer)       
     else
       -- Finished
+      local on_finish = device:get_field(AUTOFIRE_ON_FINISH)
       custom_button_utils.autofire_stop(device)
+      if on_finish then
+        on_finish(device)
+      end
     end
 
   end
 end
 
-custom_button_utils.autofire_start = function(device, button_name, pressed_type, autofire_delay_millis, autofire_max_loops)
+-- on_finish (optional) is called with the device when max loops ends the repetition
+custom_button_utils.autofire_start = function(device, button_name, pressed_type, autofire_delay_millis, autofire_max_loops, on_finish)
   -- Should there be a running timer, stop it first
   custom_button_utils.autofire_stop(device)
 
@@ -221,6 +228,7 @@ custom_button_utils.autofire_start = function(device, button_name, pressed_type,
   device:set_field(AUTOFIRE_LOOP_COUNT, 0)     
   device:set_field(AUTOFIRE_MAX_LOOPS, max_loops)     
   device:set_field(AUTOFIRE_DELAY, delay)     
+  device:set_field(AUTOFIRE_ON_FINISH, on_finish)
 end
 
 -- EXPOSE RELEASE AFTER HELD TWEAK
